@@ -16,13 +16,13 @@ while continu == "Yes" or continu == "yes":
 
     if option == "1":
         functions.add_new_golfer()
-    elif option == "1":
-        print("\nThis option has not ben implumented")
     elif option == "2":
         print("\nThis option has not ben implumented")
     elif option == "3":
-        print("\nThis option has not ben implumented")
+        functions.Add_New_Score()
     elif option == "4":
+        print("\nThis option has not ben implumented")
+    elif option == "5":
         print("\nThis option has not ben implumented")
 
     continu = input("\nDo you want to chose another option?")
