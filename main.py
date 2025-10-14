@@ -15,11 +15,11 @@ while continu == "Yes" or continu == "yes":
     option = input("pleas select an option. ")
 
     if option == "1":
-        functions.add_new_golfer()
+        functions.addNewGolfer()
     elif option == "2":
         print("\nThis option has not ben implumented")
     elif option == "3":
-        functions.Add_New_Score()
+        functions.addNewScore()
     elif option == "4":
         print("\nThis option has not ben implumented")
     elif option == "5":
