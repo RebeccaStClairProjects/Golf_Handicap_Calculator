@@ -1,4 +1,7 @@
 import mysql.connector
+import re
+from datetime import datetime
+
 conn = mysql.connector.connect(
     host = "rebeccaastclair.helioho.st",
     username = "rebeccastclair_golf",
@@ -6,7 +9,7 @@ conn = mysql.connector.connect(
     database = "rebeccastclair_handicap_calculator"
     ## ssl_ca = "path-to-ssl-certificate"  # often optional for simple setups
 )
-cursor = conn.cursor()
+cursor = conn.cursor(dictionary=True)
 
 
 
@@ -24,6 +27,7 @@ def addNewGolfer():
                (firstName, lastName, handicap, roundsPlayed, roundAvg, seasonTotal))
     # Comit the insert to the database
     conn.commit()
+    conn.close()
 
     farwell = "\nThank You " + firstName + " " + lastName + " for entering in your handicap of " + handicap + ".\n"
     print(farwell)
@@ -35,47 +39,115 @@ def addNewScore():
     total = 0  #Inisheat befoer referince
     holeNumber = 0
 
-    # Find out Basick information like which Player, Date and Time.
-    golferID = 1    ## Golfer ID hard set to 1, Add ID serch latter                                         FIX ME!!!
+    corsePar = 29 # Hardcoded corse information till corse look up function Implumented                       FIX ME !!!
+    corseRating = 58.2 #                                                                                              FIX ME !!!
+    corseSlop = 97 #                                                                                                  FIX ME !!!
+
+    #Enter Golfers name so they can get credit for the scores 
+    firstName = input("Enter the players First name: ")
+    lastName = input("enter the Players last name: ")
+        
+    #look up the golfer and the feilds that will be needed latter
+    cursor.execute("""
+        SELECT golferID,
+               handycap,
+               roundsPlayed,
+               roundAvg,
+               seasonTotal
+        FROM Golfer g
+        WHERE g.firstName = %s AND g.lastName = %s
+        """, (firstName,lastName))
     
-    date = input("\nWhat was the day for this round? ")
-    time = input("\nWhat was the start time for this round? ")
+    #Creatingn the golfer item that holds the 5 variables with labes to their collum
+    golfer = cursor.fetchone()
+    
+    if not golfer:
+        conn.close()
+        return None  # or raise ValueError("Golfer not found")
+
+    # gets the golfer ID from the golfer item
+    golferID = golfer['golferID']
+
+    #Prompt the user for the date and time of the game played.
+    userDate = input("\nEnter the date for this round (MM-DD-YYYY or MM/DD/YYYY)? ")
+    userTime = input("\nEnter the start time for this round (HH:MM, 24-hour format): ")
+
+    # If Date is not entered this will use the current date.
+    if userDate:
+        userDate = re.sub(r"[/-]", "-", userDate)  # normalize separators
+        datePlayed = datetime.strptime(userDate, "%m-%d-%Y").date()
+    else:
+        datePlayed = datetime.today().date()
+
+    # If Time is not entered this will use the curent time.
+    if userTime:
+        startTime = datetime.strptime(userTime, "%H:%M").time()
+    else:
+        startTime = datetime.now().time()
+
+    #Combines the date and time into one date time variable
+    playedOn = datetime.combine(datePlayed, startTime)
+
 
     #Prompt wether its 9 or 18 holes then inishalize the array to the corect langth
     while holeNumber != 9 and holeNumber != 18:
         holeNumber = int(input("\nWas this 9 or 18 holes? "))
     
-    scoresAll = [0]* holeNumber  
+    scoresAll = [0]* holeNumber    
     
     # Run through each elument in the aray, prompt for the players score and add to a running total
     for i in range(holeNumber):
         scoresAll[i] = int(input("\nPlease enter the score for hole " + str(i + 1) + ". "))
         total = total + scoresAll[i]
-         
+        
 
-    ## roundsPlayed = Serch for the player and incrument number of rounds played                            FIX ME!!!
-    ## roundAvg = Calculate and update golfers avrege                                                       FIX ME!!!
-    ## seasonTotal = Calculate and update golfers season totle                                              FIX ME!!!
+    # Golfer contails 5 items (golferID, handycap, roundsPlayed, roundAvg, seasonTotal)   
 
-    #Score Differenchal calculations diferent for 9 & 18 holes and each goes inton a diferent table. 
-    if holeNumber == 9:
-        # Calculate Score Differenchal         Hard codding corse information, Add Corse serch latter       FIX ME!!!
-        scoreDiffer = round(((total * 2) - 58.2) * (113 / 97), 2) 
+    roundsPlayed = golfer['roundsPlayed'] + 1
+    seasonTotal = golfer['seasonTotal'] + (total - corsePar) #Find out if the running totle is the Score Differenchal                                                   
+    roundAvg = round((seasonTotal / roundsPlayed),2)
+
+
+
+    ## calculateHandicap(): Calculate and update Handicap and Running Handicap                              FIX ME!!!
+
+    handycap = 10 # Hard codding till calculation function implumented                                      FIX ME!!!
+    runningHandicap = handycap
+
+
+
+    # Update the Golfer Deta   
+    cursor.execute("""
+    UPDATE Golfer
+    SET handycap = %s,
+        roundsPlayed = %s,
+         roundAvg = %s,
+         seasonTotal = %s
+    WHERE golferID = %s
+    """, (handycap, roundsPlayed, roundAvg, seasonTotal, golferID))
+    
+
+    #Calculations Score Differenchal AND Insert new round into score table
+    if holeNumber == 9:        
+        # Calculate Score Differenchal
+        scoreDiffer = round(((total * 2) - corseRating) * (113 / corseSlop), 2) 
+
+        # Inset a new score set into the database
+        cursor.execute("INSERT INTO Scores(golferID, playedOn, holes, total, scoreDiffer, runningHandicap, hole1, hole2, hole3, hole4, hole5, hole6, hole7, hole8, hole9) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+               (golferID, playedOn, 9, total, scoreDiffer, runningHandicap, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8]))
+        # Comit the insert to the database
+        conn.commit()
+        conn.close()
+    else:
+         # Calculate Score Differenchal         
+        scoreDiffer = round((total - corseRating) * (113 / corseSlop), 2)    
         
         # Inset a new score set into the database
-        cursor.execute("INSERT INTO Scores(holes, golferID, date, sartTime, hole1, hole2, hole3, hole4, hole5, hole6, hole7, hole8, hole9, total, scoreDiffer) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-               (9, golferID, date, time, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8], total, scoreDiffer))
+        cursor.execute("INSERT INTO Scores(( golferID, playedOn, holes, total, scoreDiffer, runningHandicap, hole1, hole2, hole3, hole4, hole5, hole6, hole7, hole8, hole9, hole10, hole11, hole12, hole13, Hole_14, Hole_15, hole16, hole17, hole18) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+               (golferID, playedOn, 18, total, scoreDiffer, runningHandicap, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8],scoresAll[9], scoresAll[10], scoresAll[11], scoresAll[12], scoresAll[13], scoresAll[14], scoresAll[15], scoresAll[16], scoresAll[17]))
         # Comit the insert to the database
         conn.commit()
-    else:
-        # Calculate Score Differenchal         Hard codding corse information, Add Corse serch latter         FIX ME!!!
-        Score_Differ = round((total - 58.2) * (113 / 97), 2)
-
-        # Inset a new score set into the database
-        cursor.execute("INSERT INTO Scores((holes, golferID, date, sartTime, hole1, hole2, hole3, hole4, hole5, hole6, hole7, hole8, hole9, hole10, hole11, hole12, hole13, Hole_14, Hole_15, hole16, hole17, hole18,  total, scoreDiffer) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-               (18, golferID, date, time, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8],scoresAll[9], scoresAll[10], scoresAll[11], scoresAll[12], scoresAll[13], scoresAll[14], scoresAll[15], scoresAll[16], scoresAll[17], total, scoreDiffer))
-        # Comit the insert to the database
-        conn.commit()
+        conn.close()
 
 
 
