@@ -2,6 +2,7 @@ import mysql.connector
 import re
 from datetime import datetime
 
+
 conn = mysql.connector.connect(
     host = "rebeccaastclair.helioho.st",
     username = "rebeccastclair_golf",
@@ -10,7 +11,6 @@ conn = mysql.connector.connect(
     ## ssl_ca = "path-to-ssl-certificate"  # often optional for simple setups
 )
 cursor = conn.cursor(dictionary=True)
-
 
 
 def addNewGolfer():
@@ -27,12 +27,47 @@ def addNewGolfer():
                (firstName, lastName, handicap, roundsPlayed, roundAvg, seasonTotal))
     # Comit the insert to the database
     conn.commit()
-    conn.close()
 
     farwell = "\nThank You " + firstName + " " + lastName + " for entering in your handicap of " + handicap + ".\n"
     print(farwell)
 
 
+def calculateHandicap(golferID):
+
+     cursor.execute("""
+        SELECT scoreDiffer
+        FROM Scores
+        WHERE golferID = %s 
+            AND scoreDiffer IS NOT NULL
+        ORDER by playedOn DESC LIMIT 20
+        """, (golferID,))
+
+     golferScoreDifferSet = cursor.fetchall()
+     
+
+     cursor.execute("""
+        SELECT MIN(runningHandicap) AS lowHI
+        FROM Scores
+        WHERE golferID = %s AND playedOn >= (CURDATE() - INTERVAL 365 DAY)
+        ORDER by playedOn DESC
+        """, (golferID,))
+
+     golferHandicapPast365 = cursor.fetchone()
+     print(golferScoreDifferSet) 
+     print("\n")
+     print(golferHandicapPast365)
+
+     test = input("\nSTOP!!!")
+
+    #handicap = calculate and update a players handicap                                                       FIX ME!!!   
+    #   Handicap index
+    #       When a score is posted it is converted into a score diferenchal that acounts for the dificolty of the stores and the tees played. 
+    #       Averege of the 8 best scores out of 20 rounds
+    #       mesehrs demenstrated abuility on their better days
+    #       Once a players index has incresed by 3 strokes the rate of increse slowes by 50%
+    #       Can not increas more then 5 in one year
+    #       if you post a scor with a score diferentchal of 7 - 9.9 strokes better then handicap index handicap is redused by an aditional stroke
+    #       If 10 or better hadicap is redused by 2
 
 
 def addNewScore():
@@ -62,7 +97,6 @@ def addNewScore():
     golfer = cursor.fetchone()
     
     if not golfer:
-        conn.close()
         return None  # or raise ValueError("Golfer not found")
 
     # gets the golfer ID from the golfer item
@@ -109,9 +143,10 @@ def addNewScore():
 
 
 
-    ## calculateHandicap(): Calculate and update Handicap and Running Handicap                              FIX ME!!!
+    calculateHandicap(golferID) 
+        # Calculate and update Handicap and Running Handicap                              FIX ME!!!
 
-    handycap = 10 # Hard codding till calculation function implumented                                      FIX ME!!!
+    handycap = 10   # Hard codding till calculation function implumented                                      FIX ME!!!
     runningHandicap = handycap
 
 
@@ -137,7 +172,6 @@ def addNewScore():
                (golferID, playedOn, 9, total, scoreDiffer, runningHandicap, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8]))
         # Comit the insert to the database
         conn.commit()
-        conn.close()
     else:
          # Calculate Score Differenchal         
         scoreDiffer = round((total - corseRating) * (113 / corseSlop), 2)    
@@ -147,30 +181,11 @@ def addNewScore():
                (golferID, playedOn, 18, total, scoreDiffer, runningHandicap, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8],scoresAll[9], scoresAll[10], scoresAll[11], scoresAll[12], scoresAll[13], scoresAll[14], scoresAll[15], scoresAll[16], scoresAll[17]))
         # Comit the insert to the database
         conn.commit()
-        conn.close()
-
-
 
 
 #def printGolferReports():
     ## golferRank =  Add functionality to determin and assighn each golfer a rank                             FIX ME!!!
 
 
-#def calculateHandicap():
-    #handicap = calculate and update a players handicap                                                       FIX ME!!!
-    ##  Rules for Calculataions
-    #   Score Differentials
-    #       Adjusted Gross Score: 
-    #           gross score, 
-    #           apply adjustments like net double bogey on holes you didn't complete
-    #           apply any penalty strokes.
-    #       Score Differential Formula:
-    #           (Adjusted Gross Score - Course Rating - Playing Conditions Adjustment) x (113 / Slope Rating).
-    #   Handicap index
-    #       When a score is posted it is converted into a score diferenchal that acounts for the dificolty of the stores and the tees played. 
-    #       Averege of the 8 best scores out of 20 rounds
-    #       mesehrs demenstrated abuility on their better days
-    #       Once a players index has incresed by 3 strokes the rate of increse slowes by 50%
-    #       Can not increas more then 5 in one year
-    #       if you post a scor with a score diferentchal of 7 - 9.9 strokes better then handicap index handicap is redused by an aditional stroke
-    #       If 10 or better hadicap is redused by 2
+def CloseCurser():
+    conn.close()
