@@ -7,7 +7,7 @@ option = 0
 while continu == "Yes" or continu == "yes":
     
     print("Hello and welcome to Polo Park East Men's Club Handicap Calculator\n")
-    print("please select from the following options\n")
+    print("Please select from the following options\n")
     print("1: Add new Golfer\n")
     print("2: Update Golfer Information\n")
     print("3: Add Round Score\n")
@@ -16,11 +16,11 @@ while continu == "Yes" or continu == "yes":
     option = input("please select an option. ")
 
     if option == "1":
-        functions.addNewGolfer()
+        functions.lookUpGolfer(1)
     elif option == "2":
-        print("\nThis option has not been implemented")
+        functions.lookUpGolfer(2)
     elif option == "3":
-        functions.addNewScore()
+        functions.lookUpGolfer(3)
     elif option == "4":
         print("\nThis option has not been implemented")
     elif option == "5":
