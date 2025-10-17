@@ -1,5 +1,6 @@
 ## This is The start of somthing new 
 import functions
+
 continu = "yes"  
 option = 0
 
@@ -15,11 +16,11 @@ while continu == "Yes" or continu == "yes":
     option = input("please select an option. ")
 
     if option == "1":
-        functions.add_new_golfer()
+        functions.addNewGolfer()
     elif option == "2":
         print("\nThis option has not been implemented")
     elif option == "3":
-        functions.Add_New_Score()
+        functions.addNewScore()
     elif option == "4":
         print("\nThis option has not been implemented")
     elif option == "5":
@@ -27,4 +28,6 @@ while continu == "Yes" or continu == "yes":
 
     continu = input("\nDo you want to chose another option?")
 
-print("\nThank you for stopping by!")
+print("\nThank you for stoping by!")
+
+functions.CloseCurser()
