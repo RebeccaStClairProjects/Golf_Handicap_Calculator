@@ -9,7 +9,7 @@ while continu == "Yes" or continu == "yes":
     print("Hello and welcome to polo Park East Men's Club Handicap Calculator\n")
     print("pleas select from the falowing options\n")
     print("1: Add new Golfer\n")
-    print("2: Test polling scores\n")
+    print("2: Update A Golder\n")
     print("3: Add Round Score\n")
     print("4: Display Curent Ranking\n")
     
@@ -18,7 +18,7 @@ while continu == "Yes" or continu == "yes":
     if option == "1":
         functions.addNewGolfer()
     elif option == "2":
-        functions.calculateHandicap(1)
+        
         print("\nThis option has not ben implumented")
     elif option == "3":
         functions.addNewScore()

@@ -1,7 +1,7 @@
 import mysql.connector
 import re
 from datetime import datetime
-
+provitional = False
 
 conn = mysql.connector.connect(
     host = "rebeccaastclair.helioho.st",
@@ -32,34 +32,60 @@ def addNewGolfer():
     print(farwell)
 
 
-def calculateHandicap(golferID):
-
+def calculateHandicap(golferID, newScoreDiffer):
+     #Pool the most resent 19 scores from the detabase, the new score makes 20
      cursor.execute("""
         SELECT scoreDiffer
         FROM Scores
         WHERE golferID = %s 
             AND scoreDiffer IS NOT NULL
-        ORDER by playedOn DESC LIMIT 20
+        ORDER by playedOn DESC LIMIT 19
         """, (golferID,))
-
-     golferScoreDifferSet = cursor.fetchall()
      
+     # Put those 19 Dictionary items into a Variable then change the dictionary to an Array
+     rows = cursor.fetchall()  
+     recent20Scores = [row['scoreDiffer'] for row in rows]
+     recent20Scores.append(newScoreDiffer)
 
+     if len(recent20Scores) < 20:
+         provitional = True
+     
+     #Sort the aray then take only the best 8, avrege them out, and put that in a new variable. 
+     recent20Scores.sort()
+     Best8Set = recent20Scores[:8]
+     
+     if Best8Set:        
+         AvregeOf8 = sum(Best8Set)/ len(Best8Set)
+         TepHandicap = round(AvregeOf8 * 0.96, 2)
+     else:
+         TepHandicap = 0
+
+     # Poll the handicaps conected to each round for the last 365 days and store the lowest Valu in a variable
      cursor.execute("""
         SELECT MIN(runningHandicap) AS lowHI
         FROM Scores
         WHERE golferID = %s AND playedOn >= (CURDATE() - INTERVAL 365 DAY)
         ORDER by playedOn DESC
         """, (golferID,))
+     HandicapPast365 = cursor.fetchone()
+     # Convert from a dictionary to a single variable
+     LowestHandicap = HandicapPast365['lowHI']
 
-     golferHandicapPast365 = cursor.fetchone()
-     print(golferScoreDifferSet) 
-     print("\n")
-     print(golferHandicapPast365)
+     # Calculate the soft and hard cap
+     softCap = LowestHandicap + 3
+     hardCap = LowestHandicap + 5
 
-     test = input("\nSTOP!!!")
+     # Check if the new handicap goes over the soft or hard cap and set handicap index
+     if TepHandicap > softCap:
+          aboveSoftCap = round(((TepHandicap - softCap)*.5),2)
+          handicapIndex = softCap + aboveSoftCap
+          if handicapIndex > hardCap:
+                handicapIndex = hardCap
+     else:
+         handicapIndex = TepHandicap
 
-    #handicap = calculate and update a players handicap                                                       FIX ME!!!   
+     return handicapIndex
+
     #   Handicap index
     #       When a score is posted it is converted into a score diferenchal that acounts for the dificolty of the stores and the tees played. 
     #       Averege of the 8 best scores out of 20 rounds
@@ -141,15 +167,27 @@ def addNewScore():
     seasonTotal = golfer['seasonTotal'] + (total - corsePar) #Find out if the running totle is the Score Differenchal                                                   
     roundAvg = round((seasonTotal / roundsPlayed),2)
 
+    if holeNumber == 9:
+        # Calculate Score Differenchal
+        scoreDiffer = round(((total * 2) - corseRating) * (113 / corseSlop), 2) 
+    else:        
+        # Calculate Score Differenchal         
+        scoreDiffer = round((total - corseRating) * (113 / corseSlop), 2)    
 
 
-    calculateHandicap(golferID) 
-        # Calculate and update Handicap and Running Handicap                              FIX ME!!!
+
+
+
+    handicapIndex = calculateHandicap(golferID, scoreDiffer) 
+        
+    # update Handicap and Running Handicap                              FIX ME!!!
 
     handycap = 10   # Hard codding till calculation function implumented                                      FIX ME!!!
     runningHandicap = handycap
 
+    print(handicapIndex)
 
+    test = input("/nSTOP!!!")
 
     # Update the Golfer Deta   
     cursor.execute("""
@@ -162,20 +200,14 @@ def addNewScore():
     """, (handycap, roundsPlayed, roundAvg, seasonTotal, golferID))
     
 
-    #Calculations Score Differenchal AND Insert new round into score table
+    #Insert new round into score table
     if holeNumber == 9:        
-        # Calculate Score Differenchal
-        scoreDiffer = round(((total * 2) - corseRating) * (113 / corseSlop), 2) 
-
         # Inset a new score set into the database
         cursor.execute("INSERT INTO Scores(golferID, playedOn, holes, total, scoreDiffer, runningHandicap, hole1, hole2, hole3, hole4, hole5, hole6, hole7, hole8, hole9) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                (golferID, playedOn, 9, total, scoreDiffer, runningHandicap, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8]))
         # Comit the insert to the database
         conn.commit()
-    else:
-         # Calculate Score Differenchal         
-        scoreDiffer = round((total - corseRating) * (113 / corseSlop), 2)    
-        
+    else:        
         # Inset a new score set into the database
         cursor.execute("INSERT INTO Scores(( golferID, playedOn, holes, total, scoreDiffer, runningHandicap, hole1, hole2, hole3, hole4, hole5, hole6, hole7, hole8, hole9, hole10, hole11, hole12, hole13, Hole_14, Hole_15, hole16, hole17, hole18) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                (golferID, playedOn, 18, total, scoreDiffer, runningHandicap, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8],scoresAll[9], scoresAll[10], scoresAll[11], scoresAll[12], scoresAll[13], scoresAll[14], scoresAll[15], scoresAll[16], scoresAll[17]))
