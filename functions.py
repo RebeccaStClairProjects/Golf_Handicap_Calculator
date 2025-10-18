@@ -1,4 +1,6 @@
 import re
+import difflib
+from tkinter import YES
 import mysql.connector
 conn = mysql.connector.connect(
     host = "rebeccaastclair.helioho.st",
@@ -10,57 +12,177 @@ conn = mysql.connector.connect(
 cursor = conn.cursor(dictionary=True)
 from datetime import datetime, date, time
 
+def dedupe(rows):
+    seen, out = set(), []
+    for r in rows:
+        if r['golferID'] not in seen:
+            seen.add(r['golferID'])
+            out.append(r)
+    return out
 
 def lookUpGolfer(option):
+    name_pattern = r"^[A-Za-z. '\-]+$"
     golfer = None
+    
     # Option 1 means adding a new golfer 
     # Option 2 means updating a golfer's information
     # Option 3 means adding a new set of scores
     if option == 1:
         print("First, let's check if the golfer is already in the system. ")
-    elif option == 3:
-        print("First, we need to look up which golfer to update before we can update their information. ")
+    elif option == 2:
+        print("First, we need to look up which golfer to update. ")
     elif option == 3:
         print("First, we need to look up which golfer the scores will be assigned to. ")
 
     while golfer == None:
-        #Enter Golfers name so they can get credit for the scores 
-        firstName = input("Enter the players first name: ")
-        lastName = input("enter the Players last name: ")
-        
+        #Variables set for repeting if names are are entered with invaled simbales
+        repetFirst = True
+        repetLast = True
+
+        #Enter Golfers First name and check if there are any invaled simbales 
+        while repetFirst == True:
+            firstName = input("Enter the players first name: ").strip().title()
+            if not re.match(name_pattern, firstName):
+                print("Invalid first name. Please use only letters, spaces, or periods.")
+            else:
+                repetFirst = False
+
+        #Enter Golfers Last name and check if there are any invaled simbales
+        while repetLast == True:
+            lastName = input("enter the Players last name: ").strip().title()
+            if not re.match(name_pattern, lastName):
+                print("Invalid last name. Please use only letters, spaces, or periods.")
+            else:
+                repetLast = False 
+
         #look up the golfer and the feilds that will be needed latter
         cursor.execute("""
-            SELECT golferID,
-                firstName,
-                lastName,
-                handycap,
-                roundsPlayed,
-                roundAvg,
-                seasonTotal
+            SELECT *
             FROM Golfer g
             WHERE g.firstName = %s AND g.lastName = %s
             """, (firstName,lastName))
     
         #Creatingn the golfer item that holds the 5 variables with labes to their collum
         golfer = cursor.fetchone()
-        
+                
         # If the name combunation was not found in the database
         if golfer == None:
-            print("That golfer could not be found. Would you like to\n")
-            print("\n1: Try again \n2: Add a new golfer")
-            chose = input()
-            if chose == '2':
-                addNewGolfer()
+            #Check if the First name is found
+            cursor.execute("""
+                SELECT *
+                FROM Golfer g
+                WHERE g.firstName = %s
+            """, (firstName,))
+            firstMatches = cursor.fetchall()
+                       
+            #Check if the Last name is found
+            cursor.execute("""
+            SELECT *
+            FROM Golfer g
+            WHERE g.lastName = %s
+            """, (lastName,))
+            lastMatches = cursor.fetchall()
+            suggestion = []
+            if not firstMatches and not lastMatches and lastName:
+                cursor.execute("SELECT lastName FROM Golfer")
+                allLastNames = [row['lastName'] for row in cursor.fetchall()]
+                close = difflib.get_close_matches(lastName, allLastNames, n=5, cutoff=0.72)
+                if close:
+                    qmarks = ",".join(["%s"] * len(close))
+                    cursor.execute(f"""
+                        SELECT *
+                        FROM Golfer
+                        WHERE lastName IN ({qmarks})
+                        ORDER BY lastName, firstName
+                    """, tuple(close))
+                    suggestionLast = cursor.fetchall()
+                    suggestion = suggestionLast
+            if not firstMatches and not lastMatches and firstName:
+                cursor.execute("SELECT firstName FROM Golfer")
+                allFisrtNames = [row['firstName'] for row in cursor.fetchall()]
+                close = difflib.get_close_matches(firstName, allFisrtNames, n=5, cutoff=0.72)
+                if close:
+                    qmarks = ",".join(["%s"] * len(close))
+                    cursor.execute(f"""
+                        SELECT *
+                        FROM Golfer
+                        WHERE firstName IN ({qmarks})
+                        ORDER BY lastName, firstName
+                    """, tuple(close))
+                    suggestionFirst = cursor.fetchall()
+                    suggestion = suggestionFirst
 
+            if suggestion:
+                candidates = dedupe(firstMatches + lastMatches + suggestion)
+            else:
+                candidates = dedupe(firstMatches + lastMatches)
+
+            if not candidates:
+                print("No exact match found, and no close matches either.")
+            else:
+                print("\nNo exact match. Did you mean:")
+                for i, g in enumerate(candidates, start=1):          
+                    fn = g['firstName'].title()
+                    ln = g['lastName'].title()
+                    print(f"{i}. {fn} {ln}")
+                print("0. None of these")
+
+                # Prompt until valid selection
+                repetList = True
+
+                while repetList == True:
+                    choice = input("Select a number: ").strip()
+                    if choice.isdigit():
+                        n = int(choice)
+                        if n == 0:
+                            if option == 1:
+                                print("Sense nune of those options are what you are looking for lets add a new golfer.")
+                                addNewGolfer(firstName,lastName)
+                                return
+                            if option == 2 or option == 3:
+                                print("Sense a match could not be found do you want to add the golfer")
+                                selection = input ("enter Yes or No")
+                                if selection.strip().lower() == "yes":
+                                    addNewGolfer(firstName,lastName)
+                                    return
+                                else:
+                                    repetList = False
+                        if 1 <= n <= len(candidates):
+                            chosen = candidates[n-1]
+                            print(f"Selected: {chosen['firstName'].title()} {chosen['lastName'].title()}")
+                            repetList = False
+                        else:
+                            print("Invalid selection. Please enter a number from the list.")
+                    else:
+                        print("Invalid selection. Please enter a number from the list.")
+                    
+                    # If the name combunation was not found in the database
+                golfer = chosen
+
+            if golfer == None:
+                print("Would you like to\n")
+                print("\n1: Try serching a new serch? \n2: Add a new golfer \n3: Exit")
+                chose = input()
+                if chose == '2':
+                    addNewGolfer()
+                    return
+                elif chose == '3':
+                    return
+    if option == 1:
+
+        print(f"Handycap: {golfer['handycap']} | Number of Rounds Played: {golfer['roundsPlayed']} | Round Averege: {golfer['roundAvg']} | Season Total: {golfer['seasonTotal']}")
+        print("No need to add them")
+        return
     if option == 2:
         print("\nThis option has not been implemented")
         return
     if option == 3:
         addNewScore(golfer)
+        return
 
 
 
-def addNewGolfer():
+def addNewGolfer(firstName, lastName):
     #The user is sent to the lookUpGolfer function first, and if the golfer is not found, they are sent here to enter the remaining data
     handicap = input("\nPleas enter handicap. ")
     roundsPlayed = input("\nPleas enter The number of rounds you have played. ")
