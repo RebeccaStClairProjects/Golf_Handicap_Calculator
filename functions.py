@@ -1,3 +1,6 @@
+import re
+import difflib
+from tkinter import YES
 import mysql.connector
 conn = mysql.connector.connect(
     host = "rebeccaastclair.helioho.st",
@@ -6,17 +9,185 @@ conn = mysql.connector.connect(
     database = "rebeccastclair_handicap_calculator"
     ## ssl_ca = "path-to-ssl-certificate"  # often optional for simple setups
 )
-cursor = conn.cursor()
+cursor = conn.cursor(dictionary=True)
+from datetime import datetime, date, time
+
+def dedupe(rows):
+    seen, out = set(), []
+    for r in rows:
+        if r['golferID'] not in seen:
+            seen.add(r['golferID'])
+            out.append(r)
+    return out
+
+def lookUpGolfer(option):
+    name_pattern = r"^[A-Za-z. '\-]+$"
+    golfer = None
+    
+    # Option 1 means adding a new golfer 
+    # Option 2 means updating a golfer's information
+    # Option 3 means adding a new set of scores
+    if option == 1:
+        print("First, let's check if the golfer is already in the system. ")
+    elif option == 2:
+        print("First, we need to look up which golfer to update. ")
+    elif option == 3:
+        print("First, we need to look up which golfer the scores will be assigned to. ")
+
+    while golfer == None:
+        #Variables set for repeting if names are are entered with invaled simbales
+        repetFirst = True
+        repetLast = True
+
+        #Enter Golfers First name and check if there are any invaled simbales 
+        while repetFirst == True:
+            firstName = input("Enter the players first name: ").strip().title()
+            if not re.match(name_pattern, firstName):
+                print("Invalid first name. Please use only letters, spaces, or periods.")
+            else:
+                repetFirst = False
+
+        #Enter Golfers Last name and check if there are any invaled simbales
+        while repetLast == True:
+            lastName = input("enter the Players last name: ").strip().title()
+            if not re.match(name_pattern, lastName):
+                print("Invalid last name. Please use only letters, spaces, or periods.")
+            else:
+                repetLast = False 
+
+        #look up the golfer and the feilds that will be needed latter
+        cursor.execute("""
+            SELECT *
+            FROM Golfer g
+            WHERE g.firstName = %s AND g.lastName = %s
+            """, (firstName,lastName))
+    
+        #Creatingn the golfer item that holds the 5 variables with labes to their collum
+        golfer = cursor.fetchone()
+                
+        # If the name combunation was not found in the database
+        if golfer == None:
+            #Check if the First name is found
+            cursor.execute("""
+                SELECT *
+                FROM Golfer g
+                WHERE g.firstName = %s
+            """, (firstName,))
+            firstMatches = cursor.fetchall()
+                       
+            #Check if the Last name is found
+            cursor.execute("""
+            SELECT *
+            FROM Golfer g
+            WHERE g.lastName = %s
+            """, (lastName,))
+            lastMatches = cursor.fetchall()
+            suggestion = []
+            if not firstMatches and not lastMatches and lastName:
+                cursor.execute("SELECT lastName FROM Golfer")
+                allLastNames = [row['lastName'] for row in cursor.fetchall()]
+                close = difflib.get_close_matches(lastName, allLastNames, n=5, cutoff=0.72)
+                if close:
+                    qmarks = ",".join(["%s"] * len(close))
+                    cursor.execute(f"""
+                        SELECT *
+                        FROM Golfer
+                        WHERE lastName IN ({qmarks})
+                        ORDER BY lastName, firstName
+                    """, tuple(close))
+                    suggestionLast = cursor.fetchall()
+                    suggestion = suggestionLast
+            if not firstMatches and not lastMatches and firstName:
+                cursor.execute("SELECT firstName FROM Golfer")
+                allFisrtNames = [row['firstName'] for row in cursor.fetchall()]
+                close = difflib.get_close_matches(firstName, allFisrtNames, n=5, cutoff=0.72)
+                if close:
+                    qmarks = ",".join(["%s"] * len(close))
+                    cursor.execute(f"""
+                        SELECT *
+                        FROM Golfer
+                        WHERE firstName IN ({qmarks})
+                        ORDER BY lastName, firstName
+                    """, tuple(close))
+                    suggestionFirst = cursor.fetchall()
+                    suggestion = suggestionFirst
+
+            if suggestion:
+                candidates = dedupe(firstMatches + lastMatches + suggestion)
+            else:
+                candidates = dedupe(firstMatches + lastMatches)
+
+            if not candidates:
+                print("No exact match found, and no close matches either.")
+            else:
+                print("\nNo exact match. Did you mean:")
+                for i, g in enumerate(candidates, start=1):          
+                    fn = g['firstName'].title()
+                    ln = g['lastName'].title()
+                    print(f"{i}. {fn} {ln}")
+                print("0. None of these")
+
+                # Prompt until valid selection
+                repetList = True
+
+                while repetList == True:
+                    choice = input("Select a number: ").strip()
+                    if choice.isdigit():
+                        n = int(choice)
+                        if n == 0:
+                            if option == 1:
+                                print("Sense nune of those options are what you are looking for lets add a new golfer.")
+                                addNewGolfer(firstName,lastName)
+                                return
+                            if option == 2 or option == 3:
+                                print("Sense a match could not be found do you want to add the golfer")
+                                selection = input ("enter Yes or No")
+                                if selection.strip().lower() == "yes":
+                                    addNewGolfer(firstName,lastName)
+                                    return
+                                else:
+                                    repetList = False
+                        if 1 <= n <= len(candidates):
+                            chosen = candidates[n-1]
+                            print(f"Selected: {chosen['firstName'].title()} {chosen['lastName'].title()}")
+                            repetList = False
+                        else:
+                            print("Invalid selection. Please enter a number from the list.")
+                    else:
+                        print("Invalid selection. Please enter a number from the list.")
+                    
+                    # If the name combunation was not found in the database
+                golfer = chosen
+
+            if golfer == None:
+                print("Would you like to\n")
+                print("\n1: Try serching a new serch? \n2: Add a new golfer \n3: Exit")
+                chose = input()
+                if chose == '2':
+                    addNewGolfer()
+                    return
+                elif chose == '3':
+                    return
+    if option == 1:
+
+        print(f"Handycap: {golfer['handycap']} | Number of Rounds Played: {golfer['roundsPlayed']} | Round Averege: {golfer['roundAvg']} | Season Total: {golfer['seasonTotal']}")
+        print("No need to add them")
+        return
+    if option == 2:
+        print("\nThis option has not been implemented")
+        return
+    if option == 3:
+        addNewScore(golfer)
+        return
 
 
-def addNewGolfer():
-    lastName = input("\nPlease enter last name.  ")
-    firstName = input("\nPlease enter first name.  ")
-    handicap = input("\nPlease enter handicap. ")
-    roundsPlayed = input("\nPlease enter The number of rounds you have played. ")
-    roundAvg = input("\nPlease enter Your Round Average. ")
-    seasonTotal = input("\nPlease enter Your season total. ")
-    ## cursor.execute("SELECT * FROM Golfers WHERE F_Name = %s AND L_Name = %s", (firstName, lastName))
+
+def addNewGolfer(firstName, lastName):
+    #The user is sent to the lookUpGolfer function first, and if the golfer is not found, they are sent here to enter the remaining data
+    handicap = input("\nPleas enter handicap. ")
+    roundsPlayed = input("\nPleas enter The number of rounds you have played. ")
+    roundAvg = input("\nPleas enter Your Round Avereg. ")
+    seasonTotal = input("\nPleas enter Your season total. ")
     
     # Inset a new golfer into the database
     cursor.execute("INSERT INTO Golfer(firstName, lastName, handycap, roundsPlayed, roundAvg, seasonTotal) VALUES (%s, %s, %s, %s, %s, %s)",
@@ -24,13 +195,11 @@ def addNewGolfer():
     # Comit the insert to the database
     conn.commit()
 
-    farwell = "\nThank You " + f_Name + " " + l_Name + " for entering in your handicap of " + handicap + ".\n"
-    print(farwell)
-    continu = input("do you wish to enter more handicaps?")
 
 
 def calculateHandicap(golferID, newScoreDiffer):
-     #Pool the most recent 19 scores from the detabase, the new score makes 20
+     provitional = False
+     #Pool the most resent 19 scores from the detabase, the new score makes 20
      cursor.execute("""
         SELECT scoreDiffer
         FROM Scores
@@ -78,51 +247,40 @@ def calculateHandicap(golferID, newScoreDiffer):
           handicapIndex = softCap + aboveSoftCap
           if handicapIndex > hardCap:
                 handicapIndex = hardCap
+     elif newScoreDiffer < (TepHandicap - 7):
+         if newScoreDiffer < (TepHandicap - 9.9):
+            handicapIndex = TepHandicap - 2
+         else:
+             handicapIndex = TepHandicap - 1
      else:
-         handicapIndex = TepHandicap
+         handicapIndex = TepHandicap     
+     
+        # Return the results of the handicap calculations 
+     return handicapIndex, provitional
 
-     return handicapIndex
-
-    #   Handicap index
-    #       When a score is posted it is converted into a score diffential that acounts for the difficulty of the stores and the tees played. 
-    #       Averege of the 8 best scores out of 20 rounds
-    #       measures demonstrated ability on the golfers better days
-    #       Once a player's index has incresed by 3 strokes the rate of increase slows by 50%
-    #       Can not increase more then 5 in one year
-    #       if you post a score with a score differential of 7 - 9.9 strokes better than handicap index, handicap is reduced by an additional stroke
-    #       If 10 or better hadicap is reduced by 2
+    #   Handicap index calculation rules
+    #       When a score is posted, it is converted into a score differential that accounts for the difficulty of the stores and the tees played. 
+    #       Average of the 8 best scores out of 20 rounds
+    #       Mesurs demonstrated ability on their better days
+    #       Once a player's index has increased by 3 strokes, the rate of increase slows by 50%
+    #       Can not increase more than 5 in one year
+    #       if you post a score with a score differential of 7 - 9.9 strokes better, the handicap index handicap is reduced by an additional stroke
+    #       If it is 10 or better, the handicap is reduced by 2
 
 
-def addNewScore():
-    total = 0  #Initiate before reference
+
+def addNewScore(golfer):
+    #Inisheat befoer referince
+    total = 0  
     holeNumber = 0
-
-    corsePar = 29 # Hardcoded course information untill course look up function Implemented                       FIX ME !!!
-    corseRating = 58.2 #                                                                                              FIX ME !!!
-    corseSlop = 97 #                                                                                                  FIX ME !!!
-
-    #Enter Golfers name so they can get credit for the scores 
-    firstName = input("Enter the player's First name: ")
-    lastName = input("enter the Player's last name: ")
-        
-    #look up the golfer and the feilds that will be needed latter
-    cursor.execute("""
-        SELECT golferID,
-               handycap,
-               roundsPlayed,
-               roundAvg,
-               seasonTotal
-        FROM Golfer g
-        WHERE g.firstName = %s AND g.lastName = %s
-        """, (firstName,lastName))
     
-    #Creating the golfer item that holds the 5 variables with labels to their column
-    golfer = cursor.fetchone()
-    
-    if not golfer:
-        return None  # or raise ValueError("Golfer not found")
-
+    corsePar = 29 # Hardcoded corse information till corse look up function Implumented                       FIX ME !!!
+    corseRating = 58.2 #                                                                                      FIX ME !!!
+    corseSlop = 97 #                                                                                          FIX ME !!!
+  
     # gets the golfer ID from the golfer item
+    #firstName = golfer['firstName']
+    #lastName = golfer['lastName']
     golferID = golfer['golferID']
 
     #Prompt the user for the date and time of the game played.
@@ -155,13 +313,12 @@ def addNewScore():
     # Run through each element in the aray, prompt for the player's score and add to a running total
     for i in range(holeNumber):
         scoresAll[i] = int(input("\nPlease enter the score for hole " + str(i + 1) + ". "))
-        total = total + scoresAll[i]
-        
+        total = total + scoresAll[i]        
 
-    # Golfer contains 5 items (golferID, handycap, roundsPlayed, roundAvg, seasonTotal)   
+    # Golfer contails 5 items (golferID, handycap, roundsPlayed, roundAvg, seasonTotal)   
 
     roundsPlayed = golfer['roundsPlayed'] + 1
-    seasonTotal = golfer['seasonTotal'] + (total - corsePar) #Find out if the running total is the Score Differential                                                   
+    seasonTotal = golfer['seasonTotal'] + (total - corsePar)                                                    
     roundAvg = round((seasonTotal / roundsPlayed),2)
 
     if holeNumber == 9:
@@ -171,46 +328,35 @@ def addNewScore():
         # Calculate Score Differential         
         scoreDiffer = round((total - corseRating) * (113 / corseSlop), 2)    
 
-
-
-
-
-    handicapIndex = calculateHandicap(golferID, scoreDiffer) 
+    #Takes the Golfer ID and Score differentially and calculates the golfer's handicap index
+    handicapIndex, provitional = calculateHandicap(golferID, scoreDiffer) 
         
-    # update Handicap and Running Handicap                              FIX ME!!!
-
-    handycap = 10   # Hard codding till calculation function implumented                                      FIX ME!!!
-    runningHandicap = handycap
-
-    print(handicapIndex)
-
-    test = input("/nSTOP!!!")
-
-    # Update the Golfer Data   
+    # Update the Golfer Deta   
     cursor.execute("""
     UPDATE Golfer
     SET handycap = %s,
         roundsPlayed = %s,
          roundAvg = %s,
-         seasonTotal = %s
+         seasonTotal = %s,
+         provitional = %s
     WHERE golferID = %s
-    """, (handycap, roundsPlayed, roundAvg, seasonTotal, golferID))
+    """, (handicapIndex, roundsPlayed, roundAvg, seasonTotal,provitional, golferID))
+    conn.commit()
     
 
     #Insert new round into score table
     if holeNumber == 9:        
         # Inset a new score set into the database
         cursor.execute("INSERT INTO Scores(golferID, playedOn, holes, total, scoreDiffer, runningHandicap, hole1, hole2, hole3, hole4, hole5, hole6, hole7, hole8, hole9) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-               (golferID, playedOn, 9, total, scoreDiffer, runningHandicap, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8]))
-        # Commit the insert to the database
+               (golferID, playedOn, 9, total, scoreDiffer, handicapIndex, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8]))
+        # Comit the insert to the database
         conn.commit()
     else:        
         # Inset a new score set into the database
         cursor.execute("INSERT INTO Scores(( golferID, playedOn, holes, total, scoreDiffer, runningHandicap, hole1, hole2, hole3, hole4, hole5, hole6, hole7, hole8, hole9, hole10, hole11, hole12, hole13, Hole_14, Hole_15, hole16, hole17, hole18) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-               (golferID, playedOn, 18, total, scoreDiffer, runningHandicap, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8],scoresAll[9], scoresAll[10], scoresAll[11], scoresAll[12], scoresAll[13], scoresAll[14], scoresAll[15], scoresAll[16], scoresAll[17]))
-        # Commit the insert to the database
+               (golferID, playedOn, 18, total, scoreDiffer, handicapIndex, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8],scoresAll[9], scoresAll[10], scoresAll[11], scoresAll[12], scoresAll[13], scoresAll[14], scoresAll[15], scoresAll[16], scoresAll[17]))
+        # Comit the insert to the database
         conn.commit()
-
 
 #def printGolferReports():
     ## golferRank =  Add functionality to determine and assign each golfer a rank                             FIX ME!!!
