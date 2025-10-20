@@ -238,8 +238,10 @@ def calculateHandicap(golferID, newScoreDiffer):
      LowestHandicap = HandicapPast365['lowHI']
 
      # Calculate the soft and hard cap
-     softCap = LowestHandicap + 3
-     hardCap = LowestHandicap + 5
+     softCap = LowestHandicap + 3                                                                       # FIX ME!!!! (Problem Below)
+     hardCap = LowestHandicap + 5                                                                       # FIX ME!!!! (Problem Below)
+     #If the player has no preveas handicap data gives an errorCheck why"unsupported operand type(s) for +: 'NoneType' and 'int'"
+
 
      # Check if the new handicap goes over the soft or hard cap and set handicap index
      if TepHandicap > softCap:

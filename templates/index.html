@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Golfer Search</title>
+</head>
+<body>
+    <main>
+        <section>
+            <h1>Look For a Golfer in the Database</h1>
+
+            <!-- Keep camelCase to match your backend -->
+            <form id="golferSerch">
+                <label>First Name:</label>
+                <input type="text" name="firstName" placeholder="a-z . - ' allowed" required><br />
+
+                <label>Last Name:</label>
+                <input type="text" name="lastName" placeholder="a-z . - ' allowed" required><br /><br />
+
+                <button id="searchButton" type="submit">Check for Golfer</button>
+            </form>
+
+            <div id="status" style="margin-top:10px; font-weight:600;"></div>
+            <pre id="result" style="background:#eee;color:#111;padding:14px;border-radius:8px;min-height:60px;"></pre>
+
+            <script>
+        const form = document.getElementById("golferSerch");
+        const statusEl = document.getElementById("status");
+        const resultEl = document.getElementById("result");
+
+        // IMPORTANT: This page is being served from Flask at http://127.0.0.1:5000/
+        // So a relative URL like "/golferSerch" hits the same origin and avoids CORS issues.
+
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();                         // stop page reload
+          statusEl.textContent = "Searching…";
+          resultEl.textContent = "";
+
+          const data = Object.fromEntries(new FormData(form));  // { firstName, lastName }
+
+          try {
+            const res = await fetch("/golferSerch", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+              const golfer = await res.json();       // Python dict → JS object
+              statusEl.textContent = "Found!";
+              resultEl.textContent = JSON.stringify(golfer, null, 2);
+            } else {
+              // Show server's message (404 not found, 400 bad input, 500 backend error…)
+              let msg;
+              try { msg = JSON.stringify(await res.json(), null, 2); }
+              catch { msg = await res.text(); }
+              statusEl.textContent = `Error ${res.status}`;
+              resultEl.textContent = msg || "Request failed.";
+            }
+          } catch (err) {
+            // This is where you’d see “Failed to fetch” if the server isn’t reachable
+            statusEl.textContent = "Network error";
+            resultEl.textContent = String(err);
+          }
+        });
+            </script>
+        </section>
+    </main>
+</body>
+</html>
