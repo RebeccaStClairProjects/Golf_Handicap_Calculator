@@ -14,6 +14,10 @@ def index():
 def ping():
     return "ok", 200
 
+
+
+
+
 @app.post("/golferSerch")   # <-- matches your fetch URL exactly
 def golferSerchByName():
     # Be forgiving with JSON parsing so the server never crashes
@@ -39,6 +43,15 @@ def golferSerchByName():
 
     # Success: send the dictionary back as JSON
     return jsonify(golfer), 200
+
+
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     import webbrowser

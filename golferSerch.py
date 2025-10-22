@@ -24,27 +24,80 @@ def dedupe(rows):
     return out
 
 def lookUpGolfer(firstName, lastName):
-    golfer = None
-    # Option 1 means adding a new golfer 
-    # Option 2 means updating a golfer's information
-    # Option 3 means adding a new set of scores
-    
-    #if option == 1:
-    #    print("First, let's check if the golfer is already in the system. ")
-    #elif option == 2:
-    #    print("First, we need to look up which golfer to update. ")
-    #elif option == 3:
-    #    print("First, we need to look up which golfer the scores will be assigned to. ")
 
     #look up the golfer and the fields that will be needed later
     cursor.execute("""
-            SELECT *
+            SELECT golferID, firstName, lastName
             FROM Golfer g
             WHERE g.firstName = %s AND g.lastName = %s
             """, (firstName,lastName))
     
     #Creating the golfer item that holds the 5 variables with labels to their column
     golfer = cursor.fetchone()
+
+    if golfer:
+        golfer["results"] = 1
+        return golfer
+
+    if not golfer:
+        #Check if the First name is found
+        cursor.execute("""
+                SELECT firstName, lastName, golferID
+                FROM Golfer g
+                WHERE g.firstName = %s
+            """, (firstName,))
+        firstMatches = cursor.fetchall()
+                       
+        #Check if the Last name is found
+        cursor.execute("""
+            SELECT firstName, lastName, golferID
+            FROM Golfer g
+            WHERE g.lastName = %s
+            """, (lastName,))
+        lastMatches = cursor.fetchall()
+
+        suggestion = []
+
+        if not firstMatches and not lastMatches and lastName:
+            cursor.execute("SELECT lastName FROM Golfer")
+            allLastNames = [row['lastName'] for row in cursor.fetchall()]
+            close = difflib.get_close_matches(lastName, allLastNames, n=5, cutoff=0.72)
+            if close:
+                qmarks = ",".join(["%s"] * len(close))
+                cursor.execute(f"""
+                        SELECT firstName, lastName, golferID
+                        FROM Golfer
+                        WHERE lastName IN ({qmarks})
+                        ORDER BY lastName, firstName
+                    """, tuple(close))
+                suggestionLast = cursor.fetchall()
+                suggestion = suggestion | suggestionLast
+
+        if not firstMatches and not lastMatches and firstName:
+            cursor.execute("SELECT firstName FROM Golfer")
+            allFisrtNames = [row['firstName'] for row in cursor.fetchall()]
+            close = difflib.get_close_matches(firstName, allFisrtNames, n=5, cutoff=0.72)
+            if close:
+                qmarks = ",".join(["%s"] * len(close))
+                cursor.execute(f"""
+                        SELECT firstName, lastName, golferID
+                        FROM Golfer
+                        WHERE firstName IN ({qmarks})
+                        ORDER BY lastName, firstName
+                    """, tuple(close))
+                suggestionFirst = cursor.fetchall()
+                suggestion =  suggestion | suggestionFirst
+
+        if suggestion:
+            candidates = dedupe(firstMatches + lastMatches + suggestion)
+            golfer = {"results": 2, "candidates": candidates}
+        else:
+            candidates = dedupe(firstMatches + lastMatches)
+            golfer = {"results": 2, "candidates": candidates}
+
+    if golfer == None:
+        golfer["results"] = 3
+
     return golfer
 
 
