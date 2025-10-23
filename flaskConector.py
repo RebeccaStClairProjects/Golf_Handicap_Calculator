@@ -10,6 +10,14 @@ def index():
     # Serves templates/index.html so the page and API share the same origin
     return render_template("index.html")
 
+@app.route("/addGolfer")
+def addGolfer():
+    return render_template("AddNewGolfer.html")
+
+@app.route("/addRound")
+def addRound():
+    return render_template("AddNewRound.html")
+
 @app.get("/ping")
 def ping():
     return "ok", 200
@@ -64,7 +72,7 @@ if __name__ == "__main__":
     # Start the timer to call open_browser() after 1 second
     Timer(1, open_browser).start()
 
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)
 
 
 

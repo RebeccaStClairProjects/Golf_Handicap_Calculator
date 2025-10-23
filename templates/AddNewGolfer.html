@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Add New Golfer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/golfer.css') }}">
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Header + Brand -->
+        <header class="site-header">
+            <div class="brand">
+                <!-- Gold badge with circular crop of your logo -->
+                <span class="brand__logo" aria-hidden="true">
+                    <img src="{{ url_for('static', filename='img/PoloParkLogo.png') }}"
+                         alt="Polo Park East round seal"
+                         class="brand__logo-image" />
+                </span>
+
+                <!-- Words live outside the circle: use text (recommended) -->
+                <h1 class="brand__title">
+                    Polo Park East — Men's Club Handicap System
+                </h1>
+            </div> 
+        </header>
+
+        <!-- Navigation Bar -->
+        <nav class="navbar" aria-label="Primary">
+            <div class="nav">
+                <a href="#" class="is-active">Add Golfer</a>
+                <a href="{{ url_for('addRound') }}">Add Round</a>
+                <a href="#">Update Handicap Metrix</a>
+                <a href="#">Print Member Handicaps</a>
+            </div>
+        </nav>
+
+        <main class="container">
+            <section class="card" id="serchDatabase">
+                <h1>Look For a Golfer in the Database</h1>
+                <h2>Before adding a new golfer first check if they are already in the system</h2>
+
+                <!-- Search Form -->
+                <form id="golferSerch" class="form" autocomplete="off">
+                    <div>
+                        <label for="firstName">First Name</label>
+                        <input id="firstName" class="input" type="text" name="firstName"
+                               placeholder="a–z . - ' allowed" required>
+                    </div>
+
+                    <div>
+                        <label for="lastName">Last Name</label>
+                        <input id="lastName" class="input" type="text" name="lastName"
+                               placeholder="a–z . - ' allowed" required>
+                    </div>
+
+                    <button id="searchButton" class="btn" type="submit">Check for Golfer</button>
+                </form>
+
+            </section>
+
+            <section class="card" id="showResolts" hidden>
+                <div id="status" class="helper" aria-live="polite"></div>
+                <div id="result"></div>
+            </section>
+
+            <section class="card" id="showCandidateOptions" hidden>
+                <div id="statusOptions" class="helper" aria-live="polite"></div>
+                <div id="candidateList"></div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            Admin tools for member handicaps.
+        </footer>
+
+        <!-- Your JS -->
+        <script src="{{ url_for('static', filename='js/nameSearch.js') }}"></script>
+    </div>
+</body>
+</html>
