@@ -1,4 +1,4 @@
-import re
+﻿import re
 import difflib
 import functions
 
@@ -56,7 +56,8 @@ def lookUpGolfer(firstName, lastName):
             """, (lastName,))
         lastMatches = cursor.fetchall()
 
-        suggestion = []
+        suggestions = []
+
 
         if not firstMatches and not lastMatches and lastName:
             cursor.execute("SELECT lastName FROM Golfer")
@@ -70,8 +71,8 @@ def lookUpGolfer(firstName, lastName):
                         WHERE lastName IN ({qmarks})
                         ORDER BY lastName, firstName
                     """, tuple(close))
-                suggestionLast = cursor.fetchall()
-                suggestion = suggestion | suggestionLast
+                suggestions += cursor.fetchall()
+                
 
         if not firstMatches and not lastMatches and firstName:
             cursor.execute("SELECT firstName FROM Golfer")
@@ -85,20 +86,16 @@ def lookUpGolfer(firstName, lastName):
                         WHERE firstName IN ({qmarks})
                         ORDER BY lastName, firstName
                     """, tuple(close))
-                suggestionFirst = cursor.fetchall()
-                suggestion =  suggestion | suggestionFirst
+                suggestions += cursor.fetchall()
+                
+        combined = dedupe((firstMatches or []) + (lastMatches or []) + (suggestions or []))
 
-        if suggestion:
-            candidates = dedupe(firstMatches + lastMatches + suggestion)
-            golfer = {"results": 2, "candidates": candidates}
-        else:
-            candidates = dedupe(firstMatches + lastMatches)
-            golfer = {"results": 2, "candidates": candidates}
+        if combined:  # non-empty list → truthy
+            return {"results": 2, "candidates": combined}
 
-    if golfer == None:
-        golfer["results"] = 3
+    return {"results": 3, "candidates": []}
 
-    return golfer
+
 
 
 

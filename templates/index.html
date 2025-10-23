@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Add New Golfer</title>
+    <title>Handicap Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/golfer.css') }}">
 </head>
 <body>
@@ -28,54 +28,46 @@
         <!-- Navigation Bar -->
         <nav class="navbar" aria-label="Primary">
             <div class="nav">
-                <a href="#" class="is-active">Add Golfer</a>
-                <a href="#">Add Round</a>
+                <!-- must match the FUNCTION NAME exactly -->
+                <a href="{{ url_for('addGolfer') }}">Add Golfer</a>
+                <a href="{{ url_for('addRound') }}">Add Round</a>
                 <a href="#">Update Handicap Metrix</a>
                 <a href="#">Print Member Handicaps</a>
             </div>
         </nav>
 
         <main class="container">
-            <section class="card" id="serchDatabase">
-                <h1>Look For a Golfer in the Database</h1>
-                <h2>Before adding a new golfer first check if they are already in the system</h2>
+            <section class="card" id="indexInfo">
 
-                <!-- Search Form -->
-                <form id="golferSerch" class="form" autocomplete="off">
-                    <div>
-                        <label for="firstName">First Name</label>
-                        <input id="firstName" class="input" type="text" name="firstName"
-                               placeholder="a–z . - ' allowed" required>
-                    </div>
-
-                    <div>
-                        <label for="lastName">Last Name</label>
-                        <input id="lastName" class="input" type="text" name="lastName"
-                               placeholder="a–z . - ' allowed" required>
-                    </div>
-
-                    <button id="searchButton" class="btn" type="submit">Check for Golfer</button>
-                </form>
-                
+                <h1>Welcome to the new Polo Park East Handicap Tracker</h1>
+                <h3>Your digital tool for maintaining accurate, up-to-date golfer records.</h3>
+                <br />
+                <h2>Getting Started</h2>
+                <p>Use the navigation menu above to access the main features of the system:</p>
+                <ul>
+                    <li><b>Add Golfer</b> – Register a new golfer in the system.</li>
+                    <li><b>Add Round</b> – Record a new round of play for an existing golfer.</li>
+                    <li><b>Update Handicap Metrics</b> – Adjust how handicaps are calculated, including course information, stroke limits, and provisional round settings.</li>
+                    <li><b>Print Member Handicaps</b> – Generate and print up-to-date handicap summaries for all registered golfers.</li>
+                </ul>
+                <br />
+                <h3>Tips for Best Results</h3>
+                <ul>
+                    <li>Before adding a new golfer, use the Golfer Search feature to ensure the player isn’t already in the system.</li>
+                    <li>Enter names exactly as they appear on official records to ensure accurate matches.</li>
+                    <li>Follow on-screen prompts carefully; each page will guide you through the required steps.</li>
+                </ul>
+                <p><i>This system was designed to make managing golfer information simple, accurate, and convenient — just like the game itself should be.</i></p>
+                                
             </section>
 
-            <section class="card" id="showResolts" hidden>
-                <div id="status" class="helper" aria-live="polite"></div>
-                <div id="result"></div>
-            </section>
-
-            <section class="card" id="showCandidateOptions" hidden>
-                <div id="statusOptions" class="helper" aria-live="polite"></div>
-                <div id="candidateList"></div>
-            </section>
+            
         </main>
 
         <footer class="site-footer">
             Admin tools for member handicaps.
         </footer>
 
-        <!-- Your JS -->
-        <script src="{{ url_for('static', filename='js/nameSearch.js') }}"></script>
     </div>
 </body>
 </html>

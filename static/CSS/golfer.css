@@ -226,6 +226,59 @@ h2 {
     color: var(--green-900)
 }
 
+.round-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; /* space between rows */
+    max-width: 800px;
+    margin: 0 auto; /* center the form */
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+}
+
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem; /* space between columns */
+}
+
+.nine-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    gap: 1rem; /* space between columns */
+}
+
+label {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.btn {
+    align-self: flex-start;
+    background: #b99b4c; /* your Polo Park gold */
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+    .btn:hover {
+        background: #a68c3e;
+    }
+
+
 /* ====== Results / Candidates ====== */
 #result {
     background: #fff;
