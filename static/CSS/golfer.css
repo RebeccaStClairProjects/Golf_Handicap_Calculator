@@ -1,0 +1,271 @@
+/* ====== Base ====== */
+:root {
+    --green-900: #083b2a; /* header / nav */
+    --green-700: #146a40; /* buttons / accents */
+    --green-100: #eaf3ee; /* light panel bg */
+    --gold-500: #c8a44d; /* accent */
+    --text-900: #222;
+    --text-700: #374151;
+    --border: #d6e3db;
+    --shadow: 0 6px 16px rgba(0,0,0,.08);
+    --logo-scale: .65; /* zoom in/out on the image inside the circle */
+    --logo-pos-x: 3.5%; /* left/right framing (0%..100%) */
+    --logo-pos-y: 0%; /* up/down framing (0%..100%) */
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* viewport height */
+}
+
+main {
+    flex: 1; /* fills remaining space between header/nav and footer */
+}
+
+/* footer styling you already have */
+.site-footer {
+    background: #f7faf8;
+    color: #4b5563;
+    padding: 18px 20px;
+    border-top: 1px solid var(--border);
+    font-size: .95rem;
+    text-align: center;
+}
+
+* {
+    box-sizing: border-box
+}
+
+html, body {
+    height: 100%
+}
+
+body {
+    margin: 0;
+    font: 16px/1.5 "Georgia", "Times New Roman", serif;
+    color: var(--text-900);
+    background: #fff;
+}
+
+/* ====== Header & Nav ====== */
+.site-header {
+    background: linear-gradient(0deg, var(--green-900), #072f22);
+    color: #fff;
+    padding: 16px 20px;
+    border-bottom: 4px solid var(--gold-500);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.brand__logo {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: var(--gold-500); /* solid gold backing */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25) inset, 0 0 2px rgba(255,255,255,.6);
+    overflow: hidden;
+    border: 2px solid rgba(16,35,21,.35);
+    position: relative;
+}
+
+/* the logo image, cropped inside the circle */
+.brand__logo-image {
+    position: relative;
+    top: -2px; /* raise image upward */
+    width: 160%;
+    height: 160%;
+    object-fit: cover;
+    object-position: var(--logo-pos-x) var(--logo-pos-y);
+    transform: scale(var(--logo-scale));
+    display: block;
+    mix-blend-mode: multiply; /* lets gold show through light areas */
+    filter: contrast(120%) brightness(0.95);
+}
+
+/* title text (the “words part” outside the circle) */
+.brand__title {
+    margin: 0;
+    font-size: 1.5rem;
+    letter-spacing: .5px;
+    color: #fff; /* header is dark green in your theme */
+}
+
+/* Nav bar */
+.navbar {
+    background: #0d4733;
+    border-top: 1px solid rgba(255,255,255,.12);
+    border-bottom: 1px solid rgba(0,0,0,.25);
+}
+
+.nav {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 20px;
+}
+
+    .nav a {
+        color: #fff;
+        text-decoration: none;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-weight: 600;
+        letter-spacing: .3px;
+        transition: transform .05s ease, background .2s ease;
+    }
+
+        .nav a:hover {
+            background: rgba(255,255,255,.08);
+            transform: translateY(-1px)
+        }
+
+        .nav a.is-active {
+            background: var(--gold-500);
+            color: #102315
+        }
+
+/* ====== Layout ====== */
+.container {
+    max-width: 1200px;
+    margin: 28px auto;
+    padding: 0 20px;
+}
+
+.card {
+    background: var(--green-100);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+}
+
+/* ====== Headings ====== */
+h1, h2, h3 {
+    font-family: "Georgia","Times New Roman",serif;
+    margin: 0 0 12px
+}
+
+h1 {
+    font-size: 1.85rem;
+    color: var(--green-900)
+}
+
+h2 {
+    font-size: 1.25rem;
+    color: var(--text-700)
+}
+
+/* ====== Form ====== */
+.form {
+    display: grid;
+    gap: 14px;
+    max-width: 520px;
+}
+
+    .form label {
+        font-weight: 600;
+        color: var(--text-700)
+    }
+
+.input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text-900);
+    outline: none;
+}
+
+    .input:focus {
+        border-color: var(--green-700);
+        box-shadow: 0 0 0 3px rgba(20,106,64,.15);
+    }
+
+.btn {
+    display: inline-block;
+    border: 0;
+    border-radius: 999px;
+    padding: 10px 16px;
+    background: var(--green-700);
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: .3px;
+    cursor: pointer;
+    transition: filter .15s ease, transform .05s ease;
+}
+
+    .btn:hover {
+        filter: brightness(1.05)
+    }
+
+    .btn:active {
+        transform: translateY(1px)
+    }
+
+.helper {
+    margin-top: 10px;
+    font-weight: 700;
+    color: var(--green-900)
+}
+
+/* ====== Results / Candidates ====== */
+#result {
+    background: #fff;
+    color: var(--text-900);
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    min-height: 60px;
+}
+
+#candidateList {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px
+}
+
+.candidate-btn {
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text-900);
+    border-radius: 999px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+
+    .candidate-btn:hover {
+        border-color: var(--green-700);
+        color: var(--green-900);
+        box-shadow: 0 0 0 3px rgba(20,106,64,.12);
+    }
+
+/* ====== Footer (optional) ====== */
+.site-footer {
+    margin-top: 40px;
+    padding: 18px 20px;
+    background: #f7faf8;
+    color: #4b5563;
+    font-size: .95rem;
+    border-top: 1px solid var(--border);
+
+}

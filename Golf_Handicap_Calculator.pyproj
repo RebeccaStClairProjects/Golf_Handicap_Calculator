@@ -28,12 +28,16 @@
     <Compile Include="main.py" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="static\CSS\golfer.css" />
+    <Content Include="static\img\PoloParkLogo.png" />
     <Content Include="static\js\nameSearch.js" />
     <Content Include="templates\index.html" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="static\" />
     <Folder Include="static\js\" />
+    <Folder Include="static\CSS\" />
+    <Folder Include="static\img\" />
     <Folder Include="templates\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
