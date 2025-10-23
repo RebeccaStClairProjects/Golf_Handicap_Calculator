@@ -3,10 +3,16 @@
 const form = document.getElementById("golferSerch");
 const statusEl = document.getElementById("status");
 const resultEl = document.getElementById("result");
+const statusOptionsEl = document.getElementById("statusOptions");
+
+function showSection(id) {
+    document.querySelectorAll("main > section").forEach(sec => sec.hidden = true);
+    document.getElementById(id).hidden = false;
+}
 
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    statusEl.textContent = "Searching…";
+    statusEl.textContent = "Searching… ";
     resultEl.innerHTML = "";
 
     const data = Object.fromEntries(new FormData(form));
@@ -25,7 +31,7 @@ form.addEventListener("submit", async (e) => {
 
         switch (Number(golfer.results)) {
             case 1:
-                // Once golfer selected open the form to add new round                                             FIX ME!!! 
+                showSection("showResolts");
                 statusEl.textContent = "Exact match found!";
                 resultEl.innerHTML = `
           <strong>Selected Golfer:</strong><br>
@@ -35,7 +41,9 @@ form.addEventListener("submit", async (e) => {
                 break;
 
             case 2: {
-                statusEl.textContent = "Close matches found!";
+                showSection("showCandidateOptions"); 
+
+                statusOptionsEl.textContent = "Close matches found!";
                 let candidatesContainer = document.getElementById("candidateList");
                 if (!candidatesContainer) {
                     candidatesContainer = document.createElement("div");
@@ -49,8 +57,10 @@ form.addEventListener("submit", async (e) => {
                     btn.classList.add("candidate-btn");
 
                     // Once golfer selected open the form to add new round                                             FIX ME!!! 
+                    
 
                     btn.addEventListener("click", () => {
+                        showSection("showResolts");
                         resultEl.innerHTML = `
               <strong>Selected Golfer:</strong><br>
               Name: ${g.firstName} ${g.lastName}<br>
