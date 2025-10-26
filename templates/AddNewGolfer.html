@@ -6,7 +6,7 @@
     <title>Add New Golfer</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/golfer.css') }}">
 </head>
-<body>
+<body data-mode="addGolfer">
     <div class="page-wrapper">
         <!-- Header + Brand -->
         <header class="site-header">
@@ -22,7 +22,7 @@
                 <h1 class="brand__title">
                     Polo Park East — Men's Club Handicap System
                 </h1>
-            </div> 
+            </div>
         </header>
 
         <!-- Navigation Bar -->
@@ -36,6 +36,8 @@
         </nav>
 
         <main class="container">
+
+
             <section class="card" id="serchDatabase">
                 <h1>Look For a Golfer in the Database</h1>
                 <h2>Before adding a new golfer first check if they are already in the system</h2>
@@ -56,26 +58,85 @@
 
                     <button id="searchButton" class="btn" type="submit">Check for Golfer</button>
                 </form>
-
             </section>
 
-            <section class="card" id="showResolts" hidden>
-                <div id="status" class="helper" aria-live="polite"></div>
-                <div id="result"></div>
+
+
+            <section class="card" id="matchFound" hidden>
+                <h1>Golfer found</h1>
+                <div id="resultMessage"></div>
+                <div id="options"></div>
             </section>
 
-            <section class="card" id="showCandidateOptions" hidden>
+
+
+            <section class="card" id="CloseMatches" hidden>
+                <h1>Close Matches Found!</h1>
                 <div id="statusOptions" class="helper" aria-live="polite"></div>
                 <div id="candidateList"></div>
+                <div id="tryOtherOptions" class="helper" aria-live="polite"></div>
+                <div id="otherOptions"></div>
             </section>
-        </main>
 
-        <footer class="site-footer">
-            Admin tools for member handicaps.
-        </footer>
 
-        <!-- Your JS -->
-        <script src="{{ url_for('static', filename='js/nameSearch.js') }}"></script>
+
+            <section class="card" id="noMatches" hidden>
+                <h1>No golfer matching your Surch</h1>
+                <form id="addRoundForm" class="round-form">
+                    <div class="form-row two-col">
+                        <div>
+                            <label for="FirstName">First Name</label>
+                            <input id="FirstName" name="firstName" class="input" type="text" readonly>
+                        </div>
+                        <div>
+                            <label for="LastName">Last Name</label>
+                            <input id="LastName" name="lastName" class="input" type="text" readonly>
+                        </div>
+                    </div>
+
+                    <label for="preExistingInformation">Does this golfer already have existing handicap information?</label>
+                    <select class="input" id="preExistingInformation" name="preExistingInformation">
+                        <option value="False" selected>No</option>
+                        <option value="True">Yes</option>
+                    </select>
+
+                    <div id="ExistingInformation" class="form-row for-col" hidden>
+                        <div class="extra-info" hidden><label>Handycap</label>
+                        <br />
+                        <br />
+                        <input type="number" name="handycap"></div>
+
+                        <div class="extra-info" hidden><label>Number of Rounds Played</label>
+                        <input type="number" name="roundsPlayed"></div>
+
+                        <div class="extra-info" hidden><label>Curent total for season</label>
+                        <input type="number" name="seasonTotal"></div>
+
+                        <div class="extra-info" hidden><label>Averige per rounds played</label>
+                        <input type="number" name="roundAvg"></div>
+                    </div>
+
+                </form>
+            </section>
+
+
+
+        <section class="card" id="ErrorDisplay" hidden>
+            <h1>ErrorDisplay</h1>
+            <div id="status" class="helper" aria-live="polite"></div>
+            <div id="result"></div>
+        </section>
+
+
+    </main>
+
+
+    <footer class="site-footer">
+        Admin tools for member handicaps.
+    </footer>
+
+    <!-- Your JS -->
+    <script src="{{ url_for('static', filename='js/nameSearch.js') }}"></script>
     </div>
 </body>
 </html>

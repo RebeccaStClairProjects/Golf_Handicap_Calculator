@@ -144,6 +144,7 @@ body {
 /* ====== Layout ====== */
 .container {
     max-width: 1200px;
+    min-width: 600px;
     margin: 28px auto;
     padding: 0 20px;
 }
@@ -250,6 +251,11 @@ h2 {
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
     gap: 1rem; /* space between columns */
 }
+.for-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 1rem; /* space between columns */
+}
 
 label {
     font-weight: 600;
@@ -278,6 +284,10 @@ input {
         background: #a68c3e;
     }
 
+.grayed-default {
+    color: lightgray;
+}
+
 
 /* ====== Results / Candidates ====== */
 #result {
@@ -289,7 +299,8 @@ input {
     min-height: 60px;
 }
 
-#candidateList {
+#candidateList, 
+#otherOptions {
     margin-top: 10px;
     display: flex;
     flex-wrap: wrap;

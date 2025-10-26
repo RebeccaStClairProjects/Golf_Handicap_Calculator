@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify, render_template
 import golferSerch as gs  # your module; ok if it returns a dict or None
 
 app = Flask(__name__)
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 @app.get("/")
 def index():
