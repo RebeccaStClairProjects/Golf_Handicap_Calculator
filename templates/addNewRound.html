@@ -6,7 +6,7 @@
     <title>Add New Round</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/golfer.css') }}">
 </head>
-<body>
+<body data-mode="addRound">
     <div class="page-wrapper">
         <!-- Header + Brand -->
         <header class="site-header">
@@ -58,8 +58,9 @@
 
                     <button id="searchButton" class="btn" type="submit">Check for Golfer</button>
                 </form>
-
             </section>
+
+
 
             <section class="card" id="matchFound" hidden>
                 <h1>Golfer found</h1>
@@ -77,7 +78,7 @@
                         </div>
                     </div>
 
-                    <input id="GolferID" name="golferID" type="hidden">
+                    <input id="GolferID" name="golferID" hidden>
                     <div class="form-row two-col">
                         <div>
                             <label for="roundDate">Date</label><aside>if left empty will use curent date</aside>
@@ -92,29 +93,61 @@
                     <label for="holeCount">Number of Holes:</label>
                     <select class="input" id="holeCount" name="holeCount">
                         <option value="9" selected>9</option>
-                        <option value="18">19</option>
+                        <option value="18">18</option>
                     </select>
 
                     <div id="holesContainer" class="form-row nine-col">
-                        <div><label>Hole 1</label><input type="number" name="hole1"></div>
-                        <div><label>Hole 2</label><input type="number" name="hole2"></div>
-                        <div><label>Hole 3</label><input type="number" name="hole3"></div>
-                        <div><label>Hole 4</label><input type="number" name="hole4"></div>
-                        <div><label>Hole 5</label><input type="number" name="hole5"></div>
-                        <div><label>Hole 6</label><input type="number" name="hole6"></div>
-                        <div><label>Hole 7</label><input type="number" name="hole7"></div>
-                        <div><label>Hole 8</label><input type="number" name="hole8"></div>
-                        <div><label>Hole 9</label><input type="number" name="hole9"></div>
+                        <div><label>Hole 1</label>
+                             <input type="number" name="hole1" min="1" value="3" class="grayed-default hole-score">
+                        </div>
+                        <div><label>Hole 2</label>
+                             <input type="number" name="hole2" min="1" value="3" class="grayed-default hole-score">
+                        </div>
+                        <div><label>Hole 3</label>
+                             <input type="number" name="hole3" min="1" value="3" class="grayed-default hole-score">
+                        </div>
+                        <div><label>Hole 4</label>
+                             <input type="number" name="hole4" min="1" value="4" class="grayed-default hole-score">
+                        </div>
+                        <div><label>Hole 5</label>
+                             <input type="number" name="hole5" min="1" value="3" class="grayed-default hole-score">
+                        </div>
+                        <div><label>Hole 6</label>
+                             <input type="number" name="hole6" min="1" value="3" class="grayed-default hole-score">
+                        </div>
+                        <div><label>Hole 7</label>
+                             <input type="number" name="hole7" min="1" value="3" class="grayed-default hole-score">
+                        </div>
+                        <div><label>Hole 8</label>
+                             <input type="number" name="hole8" min="1" value="3" class="grayed-default hole-score">
+                        </div>
+                        <div><label>Hole 9</label>
+                             <input type="number" name="hole9" min="1" value="3" class="grayed-default hole-score">
+                        </div>
 
-                        <div class="extra-holes" hidden><label>Hole 10</label><input type="number" name="hole10" min="1"></div>
-                        <div class="extra-holes" hidden><label>Hole 11</label><input type="number" name="hole11" min="1"></div>
-                        <div class="extra-holes" hidden><label>Hole 12</label><input type="number" name="hole12" min="1"></div>
-                        <div class="extra-holes" hidden><label>Hole 13</label><input type="number" name="hole13" min="1"></div>
-                        <div class="extra-holes" hidden><label>Hole 14</label><input type="number" name="hole14" min="1"></div>
-                        <div class="extra-holes" hidden><label>Hole 15</label><input type="number" name="hole15" min="1"></div>
-                        <div class="extra-holes" hidden><label>Hole 16</label><input type="number" name="hole16" min="1"></div>
-                        <div class="extra-holes" hidden><label>Hole 17</label><input type="number" name="hole17" min="1"></div>
-                        <div class="extra-holes" hidden><label>Hole 18</label><input type="number" name="hole18" min="1"></div>
+                        <div class="extra-holes" hidden><label>Hole 10</label>
+                        <input type="number" name="hole10" min="1" value="4" class="grayed-default hole-score"></div>
+                        <div class="extra-holes" hidden><label>Hole 11</label>
+                        <input type="number" name="hole11" min="1" value="3" class="grayed-default hole-score"></div>
+                        <div class="extra-holes" hidden><label>Hole 12</label>
+                        <input type="number" name="hole12" min="1" value="3" class="grayed-default hole-score"></div>
+                        <div class="extra-holes" hidden><label>Hole 13</label>
+                        <input type="number" name="hole13" min="1" value="4" class="grayed-default hole-score"></div>
+                        <div class="extra-holes" hidden><label>Hole 14</label>
+                        <input type="number" name="hole14" min="1" value="3" class="grayed-default hole-score"></div>
+                        <div class="extra-holes" hidden><label>Hole 15</label>
+                        <input type="number" name="hole15" min="1" value="3" class="grayed-default hole-score"></div>
+                        <div class="extra-holes" hidden><label>Hole 16</label>
+                        <input type="number" name="hole16" min="1" value="3" class="grayed-default hole-score"></div>
+                        <div class="extra-holes" hidden><label>Hole 17</label>
+                        <input type="number" name="hole17" min="1" value="3" class="grayed-default hole-score"></div>
+                        <div class="extra-holes" hidden><label>Hole 18</label>
+                        <input type="number" name="hole18" min="1" value="3" class="grayed-default hole-score"></div>
+                    </div>
+                    <div>
+                        <aside>
+                            The grayed-out text above represents par for each hole and will be submitted if not changed.
+                        </aside>
                     </div>
 
                     <br />
@@ -124,16 +157,17 @@
 
 
             <section class="card" id="CloseMatches" hidden>
+                <h1>Close Matches Found!</h1>
                 <div id="statusOptions" class="helper" aria-live="polite"></div>
                 <div id="candidateList"></div>
+                <div id="tryOtherOptions" class="helper" aria-live="polite"></div>
+                <div id="otherOptions"></div>
             </section>
-
 
             <section class="card" id="noMatches" hidden>
                 <h1>No golfer matching your Surch</h1>
-                <div id="result"></div>
+                <div id="options"></div>
             </section>
-
 
             <section class="card" id="ErrorDisplay" hidden>
                 <h1>ErrorDisplay</h1>
@@ -141,12 +175,6 @@
                 <div id="result"></div>
             </section>
         </main>
-
-
-
-
-
-
 
 
         <footer class="site-footer">
