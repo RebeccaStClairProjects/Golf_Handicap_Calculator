@@ -28,11 +28,6 @@ function populateAddForm(golfer) {
 
 
 
-
-
-
-
-
 const onExactMatch = {
     addRound(golfer) {
         // Prefill & show the round form
@@ -90,13 +85,6 @@ if (preExistingInformationEl) {
         }
     });
 }
-
-
-
-
-
-
-
 
 const onCloseMatches = {
     addRound(candidates) {
@@ -292,7 +280,7 @@ document.getElementById("golferSerch").addEventListener("submit", async (e) => {
 
         switch (Number(golfer.results)) {
             case 1:
-                onExactMatch[MODE](golfer);
+                onExactMatch[MODE](golfer.golfer);
                 break;
             case 2:
                 onCloseMatches[MODE](golfer.candidates);

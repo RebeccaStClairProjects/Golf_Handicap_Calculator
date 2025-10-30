@@ -1,96 +1,127 @@
-﻿import re
-import difflib
-import functions
-
+﻿import difflib
 import mysql.connector
-conn = mysql.connector.connect(
-    host = "rebeccaastclair.helioho.st",
-    username = "rebeccastclair_golf",
-    password = "BakuraCofh123",
-    database = "rebeccastclair_handicap_calculator"
-    ## ssl_ca = "path-to-ssl-certificate"  # often optional for simple setups
-)
-cursor = conn.cursor(dictionary=True)
+from errorHandler import handleDbError
 
-from tkinter import YES
+def sqlConector():
+    try:
+        conn = mysql.connector.connect(
+            host="rebeccaastclair.helioho.st",
+            user="rebeccastclair_golf",
+            password="BakuraCofh123",
+            database="rebeccastclair_handicap_calculator",
+            autocommit=True,
+        )
+        return conn
+    except Exception as e:
+        return handleDbError(e)
 
-
-def dedupe(rows):
+def dedupe(rows, key_name='golferID'):
     seen, out = set(), []
-    for r in rows:
-        if r['golferID'] not in seen:
-            seen.add(r['golferID'])
+    for r in rows or []:
+        key = r.get(key_name)
+        if key not in seen:
+            seen.add(key)
             out.append(r)
     return out
 
 def lookUpGolfer(firstName, lastName):
+    # ---------- Tier 1: Exact ----------
+    conn = sqlConector()
+    if isinstance(conn, dict) and "error" in conn:
+        return conn
 
-    #look up the golfer and the fields that will be needed later
-    cursor.execute("""
-            SELECT golferID, firstName, lastName
-            FROM Golfer g
-            WHERE g.firstName = %s AND g.lastName = %s
-            """, (firstName,lastName))
-    
-    #Creating the golfer item that holds the 5 variables with labels to their column
-    golfer = cursor.fetchone()
+    try:
+        with conn.cursor(dictionary=True, buffered=True) as cursor:
+            cursor.execute(
+                """
+                SELECT *
+                FROM Golfer g
+                WHERE g.firstName = %s AND g.lastName = %s
+                """,
+                (firstName, lastName)
+            )
+            golfer = cursor.fetchone()
+            if golfer is not None:
+                # Exact match -> results = 1
+                return {"results": 1, "golfer": golfer}
+    except Exception as e:
+        return handleDbError(e)
+    finally:
+        if conn and not isinstance(conn, dict) and conn.is_connected():
+            conn.close()
 
-    if golfer:
-        golfer["results"] = 1
-        return golfer
+    # ---------- Tier 2: Close (first-only, last-only, fuzzy) ----------
+    closeCandidates = []
+    conn = sqlConector()
+    if isinstance(conn, dict) and "error" in conn:
+        return conn
 
-    if not golfer:
-        #Check if the First name is found
-        cursor.execute("""
-                SELECT firstName, lastName, golferID
+    try:
+        with conn.cursor(dictionary=True, buffered=True) as cursor:
+            # First-only matches
+            cursor.execute(
+                """
+                SELECT *
                 FROM Golfer g
                 WHERE g.firstName = %s
-            """, (firstName,))
-        firstMatches = cursor.fetchall()
-                       
-        #Check if the Last name is found
-        cursor.execute("""
-            SELECT firstName, lastName, golferID
-            FROM Golfer g
-            WHERE g.lastName = %s
-            """, (lastName,))
-        lastMatches = cursor.fetchall()
+                """,
+                (firstName,)
+            )
+            closeCandidates += cursor.fetchall()
 
-        suggestions = []
+            # Last-only matches
+            cursor.execute(
+                """
+                SELECT *
+                FROM Golfer g
+                WHERE g.lastName = %s
+                """,
+                (lastName,)
+            )
+            closeCandidates += cursor.fetchall()
 
-
-        if not firstMatches and not lastMatches and lastName:
-            cursor.execute("SELECT lastName FROM Golfer")
-            allLastNames = [row['lastName'] for row in cursor.fetchall()]
-            close = difflib.get_close_matches(lastName, allLastNames, n=5, cutoff=0.72)
-            if close:
-                qmarks = ",".join(["%s"] * len(close))
-                cursor.execute(f"""
-                        SELECT firstName, lastName, golferID
+            # Fuzzy lastName suggestions (only if nothing found yet, optional)
+            if not closeCandidates and lastName:
+                cursor.execute("SELECT lastName FROM Golfer")
+                allLastNames = [row['lastName'] for row in cursor.fetchall()]
+                close = difflib.get_close_matches(lastName, allLastNames, n=5, cutoff=0.72)
+                if close:
+                    qmarks = ",".join(["%s"] * len(close))
+                    # f-string REQUIRED here to inject placeholders count
+                    cursor.execute(f"""
+                        SELECT *
                         FROM Golfer
                         WHERE lastName IN ({qmarks})
                         ORDER BY lastName, firstName
                     """, tuple(close))
-                suggestions += cursor.fetchall()
-                
+                    closeCandidates += cursor.fetchall()
 
-        if not firstMatches and not lastMatches and firstName:
-            cursor.execute("SELECT firstName FROM Golfer")
-            allFisrtNames = [row['firstName'] for row in cursor.fetchall()]
-            close = difflib.get_close_matches(firstName, allFisrtNames, n=5, cutoff=0.72)
-            if close:
-                qmarks = ",".join(["%s"] * len(close))
-                cursor.execute(f"""
-                        SELECT firstName, lastName, golferID
+            # Fuzzy firstName suggestions (only if still empty, optional)
+            if not closeCandidates and firstName:
+                cursor.execute("SELECT firstName FROM Golfer")
+                allFirstNames = [row['firstName'] for row in cursor.fetchall()]
+                close = difflib.get_close_matches(firstName, allFirstNames, n=5, cutoff=0.72)
+                if close:
+                    qmarks = ",".join(["%s"] * len(close))
+                    cursor.execute(f"""
+                        SELECT *
                         FROM Golfer
                         WHERE firstName IN ({qmarks})
                         ORDER BY lastName, firstName
                     """, tuple(close))
-                suggestions += cursor.fetchall()
-                
-        combined = dedupe((firstMatches or []) + (lastMatches or []) + (suggestions or []))
+                    closeCandidates += cursor.fetchall()
 
-        if combined:  # non-empty list → truthy
-            return {"results": 2, "candidates": combined}
+            closeCandidates = dedupe(closeCandidates, key_name='golferID')  # adjust key if needed
 
-    return {"results": 3,}
+            if closeCandidates:
+                # Any non-exact match -> results = 2
+                return {"results": 2, "candidates": closeCandidates}
+
+            # Nothing found anywhere -> results = 3
+            return {"results": 3, "message": "No matching golfer found."}
+
+    except Exception as e:
+        return handleDbError(e)
+    finally:
+        if conn and not isinstance(conn, dict) and conn.is_connected():
+            conn.close()
