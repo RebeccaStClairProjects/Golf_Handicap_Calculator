@@ -1,5 +1,7 @@
 import re
 import difflib
+import calculations
+
 from tkinter import YES
 import mysql.connector
 conn = mysql.connector.connect(
@@ -9,7 +11,7 @@ conn = mysql.connector.connect(
     database = "rebeccastclair_handicap_calculator"
     ## ssl_ca = "path-to-ssl-certificate"  # often optional for simple setups
 )
-cursor = conn.cursor(dictionary=True)
+cursor = conn.cursor(buffered=True,dictionary=True)
 from datetime import datetime, date, time
 
 def dedupe(rows):
@@ -19,6 +21,16 @@ def dedupe(rows):
             seen.add(r['golferID'])
             out.append(r)
     return out
+
+
+def lookUpCorse():
+    corseRating = 58.2 #                                                                                 FIX ME !!!
+    corseSlop = 97 #                                                                                     FIX ME !!! 
+    corsePar = 29 # Hardcoded course information till course look up function Implemented                FIX ME !!! 
+
+    return corseRating, corseSlop, corsePar
+         # corseRating, corseSlop, corsePar = lookUpGolfer(option)
+
 
 def lookUpGolfer(option):
     name_pattern = r"^[A-Za-z. '\-]+$"
@@ -33,6 +45,8 @@ def lookUpGolfer(option):
         print("First, we need to look up which golfer to update. ")
     elif option == 3:
         print("First, we need to look up which golfer the scores will be assigned to. ")
+    elif option == 5:
+        print("First, we need to look up which golfer to recalculate handicaps ")
 
     while golfer == None:
         #Variables set for repeating if names are entered with invaled symbols
@@ -168,18 +182,23 @@ def lookUpGolfer(option):
                     return
                 elif chose == '3':
                     return
-    if option == 1:
 
-        print(f"Handycap: {golfer['handycap']} | Number of Rounds Played: {golfer['roundsPlayed']} | Round Averege: {golfer['roundAvg']} | Season Total: {golfer['seasonTotal']}")
+    if option == 1:
+        print(f"handicap: {golfer['handicap']} | Number of Rounds Played: {golfer['roundsPlayed']} | Round Averege: {golfer['roundAvg']} | Season Total: {golfer['seasonTotal']}")
         print("No need to add them")
         return
     if option == 2:
-        print("\nThis option has not been implemented")
+        print("\nThis option has not been implemented 2")
         return
     if option == 3:
         addNewScore(golfer)
         return
-
+    if option == 4:
+        print("\nThis option has not been implemented 4")
+        return
+    if option == 5:
+        calculateEmpty(golfer)
+        return
 
 
 def addNewGolfer(firstName, lastName):
@@ -190,95 +209,54 @@ def addNewGolfer(firstName, lastName):
     seasonTotal = input("\nPlease enter Your season total. ")
     
     # Inset a new golfer into the database
-    cursor.execute("INSERT INTO Golfer(firstName, lastName, handycap, roundsPlayed, roundAvg, seasonTotal) VALUES (%s, %s, %s, %s, %s, %s)",
+    cursor.execute("INSERT INTO Golfer(firstName, lastName, handicap, roundsPlayed, roundAvg, seasonTotal) VALUES (%s, %s, %s, %s, %s, %s)",
                (firstName, lastName, handicap, roundsPlayed, roundAvg, seasonTotal))
     # Commit the insert to the database
     conn.commit()
 
 
+def findPreviasScoreDetails(golferID, roundDate):
 
-def calculateHandicap(golferID, newScoreDiffer):
-     provitional = False
-     #Pool the most recent 19 scores from the database, the new score makes 20
-     cursor.execute("""
-        SELECT scoreDiffer
-        FROM Scores
+    #Pool the most recent 19 scores from the database, the new score makes 20
+    cursor.execute("""
+       SELECT scoreDiffer
+       FROM Rounds
+       WHERE golferID = %s 
+           AND roundDate < %s
+       ORDER by roundDate DESC LIMIT 19
+       """, (golferID, roundDate))
+    
+    # Put those 19 Dictionary items into a Variable then change the dictionary to an Array
+    rows = cursor.fetchall()  
+    proceeding20Scores = [row['scoreDiffer'] for row in rows]
+
+    cursor.execute("""
+         
+        SELECT runningHandicap
+        FROM Rounds
         WHERE golferID = %s 
-            AND scoreDiffer IS NOT NULL
-        ORDER by playedOn DESC LIMIT 19
-        """, (golferID,))
-     
-     # Put those 19 Dictionary items into a Variable then change the dictionary to an Array
-     rows = cursor.fetchall()  
-     recent20Scores = [row['scoreDiffer'] for row in rows]
-     recent20Scores.append(newScoreDiffer)
+          AND roundDate < (%s) 
+        ORDER by runningHandicap ASC
+        """, (golferID, roundDate))
 
-     if len(recent20Scores) < 20:
-         provitional = True
-     
-     #Sort the aray then take only the best 8, avrage them out, and put that in a new variable. 
-     recent20Scores.sort()
-     Best8Set = recent20Scores[:8]
-     
-     if Best8Set:        
-         AvregeOf8 = sum(Best8Set)/ len(Best8Set)
-         TepHandicap = round(AvregeOf8 * 0.96, 2)
-     else:
-         TepHandicap = 0
+    HandicapPast365 = cursor.fetchone()
+    
+    if HandicapPast365 is None:
+        lowestProceedingHandicap = 15
+    else:
+        # Convert from a dictionary to a single variable
+        lowestProceedingHandicap = HandicapPast365['runningHandicap']
 
-     # Poll the handicaps conected to each round for the last 365 days and store the lowest Value in a variable
-     cursor.execute("""
-        SELECT MIN(runningHandicap) AS lowHI
-        FROM Scores
-        WHERE golferID = %s AND playedOn >= (CURDATE() - INTERVAL 365 DAY)
-        ORDER by playedOn DESC
-        """, (golferID,))
-     HandicapPast365 = cursor.fetchone()
-     # Convert from a dictionary to a single variable
-     LowestHandicap = HandicapPast365['lowHI']
-
-     # Calculate the soft and hard cap
-     softCap = LowestHandicap + 3                                                                       # FIX ME!!!! (Problem Below)
-     hardCap = LowestHandicap + 5                                                                       # FIX ME!!!! (Problem Below)
-     #If the player has no preveas handicap data gives an errorCheck why"unsupported operand type(s) for +: 'NoneType' and 'int'"
-
-
-     # Check if the new handicap goes over the soft or hard cap and set handicap index
-     if TepHandicap > softCap:
-          aboveSoftCap = round(((TepHandicap - softCap)*.5),2)
-          handicapIndex = softCap + aboveSoftCap
-          if handicapIndex > hardCap:
-                handicapIndex = hardCap
-     elif newScoreDiffer < (TepHandicap - 7):
-         if newScoreDiffer < (TepHandicap - 9.9):
-            handicapIndex = TepHandicap - 2
-         else:
-             handicapIndex = TepHandicap - 1
-     else:
-         handicapIndex = TepHandicap     
-     
-        # Return the results of the handicap calculations 
-     return handicapIndex, provitional
-
-    #   Handicap index calculation rules
-    #       When a score is posted, it is converted into a score differential that accounts for the difficulty of the course and the tees played. 
-    #       Average of the 8 best scores out of 20 rounds
-    #       Measures the demonstrated ability on their better days
-    #       Once a player's index has increased by 3 strokes, the rate of increase slows by 50%
-    #       Can not increase more than 5 in one year
-    #       if you post a score with a score differential of 7 - 9.9 strokes better, the handicap index handicap is reduced by an additional stroke
-    #       If it is 10 or better, the handicap is reduced by 2
-
+    return proceeding20Scores, lowestProceedingHandicap 
+         # proceeding20Scores, lowestProceedingHandicap = findPreviasScoreDetails(golferID, roundDate)
 
 
 def addNewScore(golfer):
     #Initiate before reference
     total = 0  
     holeNumber = 0
-    
-    corsePar = 29 # Hardcoded course information till course look up function Implemented                       FIX ME !!!
-    corseRating = 58.2 #                                                                                      FIX ME !!!
-    corseSlop = 97 #                                                                                          FIX ME !!!
+
+    corseRating, corseSlop, corsePar = lookUpCorse()
   
     # gets the golfer ID from the golfer item
     #firstName = golfer['firstName']
@@ -303,7 +281,7 @@ def addNewScore(golfer):
         startTime = datetime.now().time()
 
     #Combines the date and time into one date time variable
-    playedOn = datetime.combine(datePlayed, startTime)
+    roundDate = datetime.combine(datePlayed, startTime)
 
 
     #Prompt whether its 9 or 18 holes then initialize the array to the corect langth
@@ -317,26 +295,26 @@ def addNewScore(golfer):
         scoresAll[i] = int(input("\nPlease enter the score for hole " + str(i + 1) + ". "))
         total = total + scoresAll[i]        
 
-    # Golfer contails 5 items (golferID, handycap, roundsPlayed, roundAvg, seasonTotal)   
+    # FIX ME!!! Add fuctionality for max holebassed on pare May need two tables to track actual scores and maximum hole score for calculateding hadicap. 
 
+    # Golfer contails 5 items (golferID, handicap, roundsPlayed, roundAvg, seasonTotal)   
+
+    # FIX ME !!! Poll Out to its own function
     roundsPlayed = golfer['roundsPlayed'] + 1
     seasonTotal = golfer['seasonTotal'] + (total - corsePar)                                                    
     roundAvg = round((seasonTotal / roundsPlayed),2)
 
-    if holeNumber == 9:
-        # Calculate Score Differential
-        scoreDiffer = round(((total * 2) - corseRating) * (113 / corseSlop), 2) 
-    else:        
-        # Calculate Score Differential         
-        scoreDiffer = round((total - corseRating) * (113 / corseSlop), 2)    
+    scoreDiffer = calculations.scoreDiffer(total, holeNumber, corseRating, corseSlop)  
+
+    proceeding20Scores, lowestProceedingHandicap = findPreviasScoreDetails(golferID, roundDate)
 
     #Takes the Golfer ID and Score differentially and calculates the golfer's handicap index
-    handicapIndex, provitional = calculateHandicap(golferID, scoreDiffer) 
+    handicapIndex = calculations.handicap(scoreDiffer, proceeding20Scores, lowestProceedingHandicap) 
         
     # Update the Golfer Deta   
     cursor.execute("""
     UPDATE Golfer
-    SET handycap = %s,
+    SET handicap = %s,
         roundsPlayed = %s,
          roundAvg = %s,
          seasonTotal = %s,
@@ -349,16 +327,61 @@ def addNewScore(golfer):
     #Insert new round into score table
     if holeNumber == 9:        
         # Inset a new score set into the database
-        cursor.execute("INSERT INTO Scores(golferID, playedOn, holes, total, scoreDiffer, runningHandicap, hole1, hole2, hole3, hole4, hole5, hole6, hole7, hole8, hole9) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-               (golferID, playedOn, 9, total, scoreDiffer, handicapIndex, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8]))
+        cursor.execute("""INSERT INTO Rounds(golferID, roundDate, holes, total, scoreDiffer, runningHandicap, hole1, hole2, hole3, hole4, hole5, hole6, hole7, hole8, hole9) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+               (golferID, roundDate, 9, total, scoreDiffer, handicapIndex, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8]))
         # Commit the insert to the database
         conn.commit()
     else:        
         # Inset a new score set into the database
-        cursor.execute("INSERT INTO Scores(( golferID, playedOn, holes, total, scoreDiffer, runningHandicap, hole1, hole2, hole3, hole4, hole5, hole6, hole7, hole8, hole9, hole10, hole11, hole12, hole13, Hole_14, Hole_15, hole16, hole17, hole18) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-               (golferID, playedOn, 18, total, scoreDiffer, handicapIndex, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8],scoresAll[9], scoresAll[10], scoresAll[11], scoresAll[12], scoresAll[13], scoresAll[14], scoresAll[15], scoresAll[16], scoresAll[17]))
+        cursor.execute("""INSERT INTO Rounds(( golferID, roundDate, holes, total, scoreDiffer, runningHandicap, hole1, hole2, hole3, hole4, hole5, hole6, hole7, hole8, hole9, hole10, hole11, hole12, hole13, Hole_14, Hole_15, hole16, hole17, hole18) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+               (golferID, roundDate, 18, total, scoreDiffer, handicapIndex, scoresAll[0], scoresAll[1], scoresAll[2], scoresAll[3],scoresAll[4], scoresAll[5], scoresAll[6], scoresAll[7], scoresAll[8],scoresAll[9], scoresAll[10], scoresAll[11], scoresAll[12], scoresAll[13], scoresAll[14], scoresAll[15], scoresAll[16], scoresAll[17]))
         # Commit the insert to the database
         conn.commit()
+
+        # Chage the refrince to recive the golfer dictionary.
+
+
+def calculateTotal():
+
+    return
+
+
+def calculateAll(golfer):
+
+    golferID = golfer #['golferID']
+    
+    cursor.execute("""
+       SELECT * FROM Rounds
+       WHERE golferID = %s 
+       ORDER by roundDate ASC
+       """, (golferID, ))
+
+    allGolferRounds = cursor.fetchall()
+
+    for dictionary in allGolferRounds:
+    # 'dictionary' is a variable representing the current dictionary in the loop
+        corseRating, corseSlop, corsePar = lookUpCorse()
+        roundTotal = (dictionary['hole1'] + dictionary['hole2'] + dictionary['hole3'] + dictionary['hole4'] + dictionary['hole5'] + dictionary['hole6'] + dictionary['hole7'] + dictionary['hole8'] + dictionary['hole9'])
+        # Right now it is only set to calculate on the first 9 holes beacuse most of the10-18 holes are null
+        scoreDiffer = calculations.scoreDiffer(roundTotal, 9, corseRating, corseSlop)
+        
+        proceeding20Scores, lowestProceedingHandicap = findPreviasScoreDetails(golferID, dictionary['roundDate'])
+
+        handicapIndex = calculations.handicap(scoreDiffer, proceeding20Scores, lowestProceedingHandicap)
+
+      
+        cursor.execute("""
+            UPDATE Rounds
+            SET runningHandicap = %s,
+                scoreDiffer = %s
+            WHERE roundID = %s
+            """, (handicapIndex, scoreDiffer, dictionary['roundID']))
+        conn.commit()
+
+        print("roundDate = ", dictionary['roundDate'],", scoreDiffer = ", scoreDiffer, ", handicapIndex = ", handicapIndex)
+    return
 
 #def printGolferReports():
     ## golferRank =  Add functionality to determine and assign each golfer a rank                             FIX ME!!!

@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>18db94e5-ec11-4cdc-904c-869f6cf76818</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>flaskConector.py</StartupFile>
+    <StartupFile>pythonOnly\main.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,25 +22,28 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="flaskConector.py" />
-    <Compile Include="functions.py" />
-    <Compile Include="golferSerch.py" />
-    <Compile Include="main.py" />
+    <Compile Include="pythonOnly\calculations.py" />
+    <Compile Include="flaskVertion\flaskConector.py" />
+    <Compile Include="pythonOnly\functions.py" />
+    <Compile Include="flaskVertion\golferSerch.py" />
+    <Compile Include="pythonOnly\main.py" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="static\CSS\golfer.css" />
-    <Content Include="static\img\PoloParkLogo.png" />
-    <Content Include="static\js\nameSearch.js" />
-    <Content Include="templates\AddNewGolfer.html" />
-    <Content Include="templates\addNewRound.html" />
-    <Content Include="templates\index.html" />
+    <Content Include="flaskVertion\static\CSS\golfer.css" />
+    <Content Include="flaskVertion\static\img\PoloParkLogo.png" />
+    <Content Include="flaskVertion\static\js\nameSearch.js" />
+    <Content Include="flaskVertion\templates\AddNewGolfer.html" />
+    <Content Include="flaskVertion\templates\addNewRound.html" />
+    <Content Include="flaskVertion\templates\index.html" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="static\" />
-    <Folder Include="static\js\" />
-    <Folder Include="static\CSS\" />
-    <Folder Include="static\img\" />
-    <Folder Include="templates\" />
+    <Folder Include="flaskVertion\" />
+    <Folder Include="pythonOnly\" />
+    <Folder Include="flaskVertion\static\" />
+    <Folder Include="flaskVertion\static\js\" />
+    <Folder Include="flaskVertion\static\CSS\" />
+    <Folder Include="flaskVertion\static\img\" />
+    <Folder Include="flaskVertion\templates\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
