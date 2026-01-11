@@ -53,7 +53,7 @@ def lookUpGolfer(option):
         repetFirst = True
         repetLast = True
 
-        #Enter Golfers First name and check if there are any invaled symbols 
+        #Enter Golfers First name and check if there are any invalid symbols 
         while repetFirst == True:
             firstName = input("Enter the player's first name: ").strip().title()
             if not re.match(name_pattern, firstName):
@@ -61,9 +61,9 @@ def lookUpGolfer(option):
             else:
                 repetFirst = False
 
-        #Enter Golfers Last name and check if there are any invaled symbols 
+        #Enter Golfers Last name and check if there are any invalid symbols 
         while repetLast == True:
-            lastName = input("enter the Players last name: ").strip().title()
+            lastName = input("enter the players last name: ").strip().title()
             if not re.match(name_pattern, lastName):
                 print("Invalid last name. Please use only letters, spaces, or periods.")
             else:
@@ -175,7 +175,6 @@ def lookUpGolfer(option):
 
             if golfer == None:
                 print("Would you like to\n")
-                print("\n1: Try serching a new serch? \n2: Add a new golfer \n3: Exit")
                 chose = input()
                 if chose == '2':
                     addNewGolfer()
@@ -205,8 +204,8 @@ def addNewGolfer(firstName, lastName):
     #The user is sent to the lookUpGolfer function first, and if the golfer is not found, they are sent here to enter the remaining data
     handicap = input("\nPlease enter handicap. ")
     roundsPlayed = input("\nPlease enter The number of rounds you have played. ")
-    roundAvg = input("\nPlease enter Your Round Averege. ")
-    seasonTotal = input("\nPlease enter Your season total. ")
+    roundAvg = input("\nPlease enter your round average. ")
+    seasonTotal = input("\nPlease enter your season total. ")
     
     # Inset a new golfer into the database
     cursor.execute("INSERT INTO Golfer(firstName, lastName, handicap, roundsPlayed, roundAvg, seasonTotal) VALUES (%s, %s, %s, %s, %s, %s)",
@@ -295,11 +294,11 @@ def addNewScore(golfer):
         scoresAll[i] = int(input("\nPlease enter the score for hole " + str(i + 1) + ". "))
         total = total + scoresAll[i]        
 
-    # FIX ME!!! Add fuctionality for max holebassed on pare May need two tables to track actual scores and maximum hole score for calculateding hadicap. 
+    # FIX ME!!! Add functionality for max hole bassed on Net +2. May need two tables to track actual scores and maximum hole score for calculateding hadicap. 
 
-    # Golfer contails 5 items (golferID, handicap, roundsPlayed, roundAvg, seasonTotal)   
+    # Golfer contains 5 items (golferID, handicap, roundsPlayed, roundAvg, seasonTotal)   
 
-    # FIX ME !!! Poll Out to its own function
+    # FIX ME !!! Pull Out to its own function
     roundsPlayed = golfer['roundsPlayed'] + 1
     seasonTotal = golfer['seasonTotal'] + (total - corsePar)                                                    
     roundAvg = round((seasonTotal / roundsPlayed),2)
@@ -308,7 +307,7 @@ def addNewScore(golfer):
 
     proceeding20Scores, lowestProceedingHandicap = findPreviasScoreDetails(golferID, roundDate)
 
-    #Takes the Golfer ID and Score differentially and calculates the golfer's handicap index
+    #Takes the Golfer ID and Score differential and calculates the golfer's handicap index
     handicapIndex = calculations.handicap(scoreDiffer, proceeding20Scores, lowestProceedingHandicap) 
         
     # Update the Golfer Deta   
@@ -340,7 +339,7 @@ def addNewScore(golfer):
         # Commit the insert to the database
         conn.commit()
 
-        # Chage the refrince to recive the golfer dictionary.
+        # Chage the reference to receive the golfer dictionary.
 
 
 def calculateTotal():

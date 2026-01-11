@@ -11,8 +11,8 @@ while continu == "Yes" or continu == "yes":
     print("1: Add new Golfer\n")
     print("2: Update Golfer Information\n")
     print("3: Add Round Score\n")
-    print("4: Calculare Missing Handicaps\n")
-    print("5: Recalculare All Handicaps For One Golfer\n")
+    print("4: Calculate Missing Handicaps\n")
+    print("5: Recalculate All Handicaps For One Golfer\n")
     
     option = input("please select an option. ")
 
@@ -24,14 +24,14 @@ while continu == "Yes" or continu == "yes":
         functions.lookUpGolfer(3)
     elif option == "4":
         # functions.lookUpGolfer(4)
-        functions.calculateEmpty() #Hardcoded for testing, use above code for implimenting golfer search first.
+        functions.calculateEmpty() #Hardcoded for testing, use above code for implementing golfer search first.
     elif option == "5":
         # functions.lookUpGolfer(5)
         golferInput = input("Select a golfer by ID between 1 and 29 ")
-        functions.calculateAll(golferInput) #Hardcoded for testing, use above code for implimenting golfer search first.
+        functions.calculateAll(golferInput) #Hardcoded for testing, use above code for implementing golfer search first.
 
     continu = input("\nDo you want to chose another option?")
 
-print("\nThank you for stoping by!")
+print("\nThank you for stopping by!")
 
 functions.CloseCurser()

@@ -17,7 +17,7 @@ def handicap(ScoreDiffer, proceeding20Scores, LowestHandicap):
 
     proceeding20Scores.append(ScoreDiffer)
     
-    #Sort the aray then take only the best 8, avrage them out, and put that in a new variable. 
+    #Sort the aray then take only the best 8, average them out, and put that in a new variable. 
     proceeding20Scores.sort()
     Best8Set = proceeding20Scores[:8]    
     
