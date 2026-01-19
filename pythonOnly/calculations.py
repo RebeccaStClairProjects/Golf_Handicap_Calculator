@@ -1,16 +1,16 @@
 
 
-def scoreDiffer(ajustatedScoreTotal, holeNumber, corseRating, corseSlop):    
+def scoreDiffer(ajustatedScoreTotal, holeNumber, courseRating, courseSlope):    
     
     if holeNumber == 9:
         # Calculate Score Differential
-        scoreDiffer = round(((ajustatedScoreTotal * 2) - corseRating) * (113 / corseSlop), 2) 
+        scoreDiffer = round(((ajustatedScoreTotal * 2) - courseRating) * (113 / courseSlope), 2) 
     else:        
         # Calculate Score Differential         
-        scoreDiffer = round((ajustatedScoreTotal - corseRating) * (113 / corseSlop), 2)  
+        scoreDiffer = round((ajustatedScoreTotal - courseRating) * (113 / courseSlope), 2)  
 
     return scoreDiffer
-         # scoreDiffer = calculations.scoreDiffer(ajustatedScoreTotal, holeNumber, corseRating, corseSlop)
+         # scoreDiffer = calculations.scoreDiffer(ajustatedScoreTotal, holeNumber, courseRating, courseSlope)
 
 
 def handicap(ScoreDiffer, proceeding20Scores, LowestHandicap):

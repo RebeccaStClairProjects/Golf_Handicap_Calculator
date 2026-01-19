@@ -24,12 +24,12 @@ def dedupe(rows):
 
 
 def lookUpCorse():
-    corseRating = 58.2 #                                                                                 FIX ME !!!
-    corseSlop = 97 #                                                                                     FIX ME !!! 
-    corsePar = 29 # Hardcoded course information till course look up function Implemented                FIX ME !!! 
+    courseRating = 58.2 #                                                                                 FIX ME !!!
+    courseSlope = 97 #                                                                                     FIX ME !!! 
+    coursePar = 58 # Hardcoded course information till course look up function Implemented                FIX ME !!! 
 
-    return corseRating, corseSlop, corsePar
-         # corseRating, corseSlop, corsePar = lookUpGolfer(option)
+    return courseRating, courseSlope, coursePar
+         # courseRating, courseSlope, coursePar = lookUpGolfer(option)
 
 
 def lookUpGolfer(option):
@@ -255,7 +255,7 @@ def addNewScore(golfer):
     total = 0  
     holeNumber = 0
 
-    corseRating, corseSlop, corsePar = lookUpCorse()
+    courseRating, courseSlope, coursePar = lookUpCorse()
   
     # gets the golfer ID from the golfer item
     #firstName = golfer['firstName']
@@ -300,10 +300,10 @@ def addNewScore(golfer):
 
     # FIX ME !!! Pull Out to its own function
     roundsPlayed = golfer['roundsPlayed'] + 1
-    seasonTotal = golfer['seasonTotal'] + (total - corsePar)                                                    
+    seasonTotal = golfer['seasonTotal'] + (total - coursePar)                                                    
     roundAvg = round((seasonTotal / roundsPlayed),2)
 
-    scoreDiffer = calculations.scoreDiffer(total, holeNumber, corseRating, corseSlop)  
+    scoreDiffer = calculations.scoreDiffer(total, holeNumber, courseRating, courseSlope)  
 
     proceeding20Scores, lowestProceedingHandicap = findPreviasScoreDetails(golferID, roundDate)
 
@@ -321,7 +321,7 @@ def addNewScore(golfer):
     WHERE golferID = %s
     """, (handicapIndex, roundsPlayed, roundAvg, seasonTotal,provitional, golferID))
     conn.commit()
-    
+    # FIX ME.  Remove provitional
 
     #Insert new round into score table
     if holeNumber == 9:        
@@ -361,10 +361,10 @@ def calculateAll(golfer):
 
     for dictionary in allGolferRounds:
     # 'dictionary' is a variable representing the current dictionary in the loop
-        corseRating, corseSlop, corsePar = lookUpCorse()
+        courseRating, courseSlope, coursePar = lookUpCorse()
         roundTotal = (dictionary['hole1'] + dictionary['hole2'] + dictionary['hole3'] + dictionary['hole4'] + dictionary['hole5'] + dictionary['hole6'] + dictionary['hole7'] + dictionary['hole8'] + dictionary['hole9'])
         # Right now it is only set to calculate on the first 9 holes beacuse most of the10-18 holes are null
-        scoreDiffer = calculations.scoreDiffer(roundTotal, 9, corseRating, corseSlop)
+        scoreDiffer = calculations.scoreDiffer(roundTotal, 9, courseRating, courseSlope)
         
         proceeding20Scores, lowestProceedingHandicap = findPreviasScoreDetails(golferID, dictionary['roundDate'])
 
