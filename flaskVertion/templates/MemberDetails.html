@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Member Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/golfer.css') }}">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header class="site-header">
+            <div class="brand">
+                <span class="brand__logo" aria-hidden="true">
+                    <img src="{{ url_for('static', filename='img/PoloParkLogo.png') }}"
+                         alt="Polo Park East round seal"
+                         class="brand__logo-image" />
+                </span>
+                <h1 class="brand__title">
+                    Polo Park East - Men's Club Handicap System
+                </h1>
+            </div>
+        </header>
+
+        <nav class="navbar" aria-label="Primary">
+            <div class="nav">
+                <a href="{{ url_for('addGolfer') }}">Add Golfer</a>
+                <a href="{{ url_for('addRound') }}">Add Round</a>
+                <a href="#">Update Handicap Metrix</a>
+                <a href="{{ url_for('printMemberHandicaps') }}" class="is-active">Print Member Handicaps</a>
+            </div>
+        </nav>
+
+        <main class="container">
+            <section class="card">
+                <h1>Golfer Details</h1>
+                <p><a class="member-link" href="{{ url_for('printMemberHandicaps') }}">Back to Member List</a></p>
+
+                {% if error %}
+                    <div class="helper">{{ error }}</div>
+                {% elif summary %}
+                    <div class="member-summary">
+                        <div class="member-summary-item">
+                            <div class="member-summary-label">Rank</div>
+                            <div class="member-summary-value">{{ summary.rank }}</div>
+                        </div>
+                        <div class="member-summary-item">
+                            <div class="member-summary-label">First Name</div>
+                            <div class="member-summary-value">{{ summary.firstName }}</div>
+                        </div>
+                        <div class="member-summary-item">
+                            <div class="member-summary-label">Last Name</div>
+                            <div class="member-summary-value">{{ summary.lastName }}</div>
+                        </div>
+                        <div class="member-summary-item">
+                            <div class="member-summary-label">Current Handicap</div>
+                            <div class="member-summary-value">{{ summary.handicap }}</div>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="member-table">
+                            <thead>
+                                <tr>
+                                    <th>Date / Time</th>
+                                    <th>Total</th>
+                                    <th>Score Differential</th>
+                                    <th>Handicap</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in rounds %}
+                                    <tr>
+                                        <td>{{ r.playedOn if r.playedOn is not none else "-" }}</td>
+                                        <td>{{ r.total }}</td>
+                                        <td>{{ r.scoreDiffer }}</td>
+                                        <td>{{ r.runningHandicap }}</td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4">No rounds found for this golfer.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            Admin tools for member handicaps.
+        </footer>
+    </div>
+</body>
+</html>

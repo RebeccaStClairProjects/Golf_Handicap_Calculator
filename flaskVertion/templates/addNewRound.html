@@ -31,148 +31,161 @@
                 <a href="{{ url_for('addGolfer') }}">Add Golfer</a>
                 <a href="#" class="is-active">Add Round</a>
                 <a href="#">Update Handicap Metrix</a>
-                <a href="#">Print Member Handicaps</a>
+                <a href="{{ url_for('printMemberHandicaps') }}">Print Member Handicaps</a>
             </div>
         </nav>
 
         <main class="container">
+            <section class="card" id="addRoundCard">
+                <h1>Add Round</h1>
+                <div id="nameCheckStatusRound" class="helper" aria-live="polite"></div>
 
+                <form id="addRoundForm" class="round-form" autocomplete="off">
+                    <fieldset id="addRoundFields">
+                        <div class="form-row two-col">
+                            <div>
+                                <label for="firstName">First Name</label>
+                                <input id="firstName" name="firstName" class="input" type="text"
+                                       placeholder="a-z . - ' allowed" required>
+                            </div>
+                            <div>
+                                <label for="lastName">Last Name</label>
+                                <input id="lastName" name="lastName" class="input" type="text"
+                                       placeholder="a-z . - ' allowed" required>
+                            </div>
+                        </div>
 
-            <section class="card" id="serchDatabase">
-                <h1>Look For a Golfer in the Database</h1>
-                <h2>Before adding a new round first check for the golfer the scores belong to in the system</h2>
+                        <input id="GolferID" name="golferID" hidden>
+                        <div class="form-row two-col">
+                            <div>
+                                <label for="roundDate">Date</label><aside>if left empty will use curent date</aside>
+                                <input id="roundDate" name="date" type="date" class="input">
+                            </div>
+                            <div>
+                                <label for="roundTate">Start Time</label><aside>if left empty will use curent time</aside>
+                                <input id="roundTate" name="time" type="time" class="input">
+                            </div>
+                        </div>
 
-                <!-- Search Form -->
-                <form id="golferSerch" class="form" autocomplete="off">
-                    <div>
-                        <label for="firstName">First Name</label>
-                        <input id="firstName" class="input" type="text" name="firstName"
-                               placeholder="a–z . - ' allowed" required>
-                    </div>
+                        <div class="form-row three-col">
+                            <div>
+                                <label for="holeCount">Number of Holes:</label>
+                                <select class="input" id="holeCount" name="holeCount">
+                                    <option value="9" selected>9</option>
+                                    <option value="18">18</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="corseID">Course:</label>
+                                <select class="input" id="corseID" name="corseID" required>
+                                    <option value="">Select a course</option>
+                                    {% for c in courses %}
+                                        <option value="{{ c.courseID }}">{{ c.courseName }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label for="teeID">Tee:</label>
+                                <select class="input" id="teeID" name="teeID" disabled required>
+                                    <option value="">Select a tee</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% if course_error %}
+                            <div class="helper">Could not load courses/tees: {{ course_error }}</div>
+                        {% endif %}
 
-                    <div>
-                        <label for="lastName">Last Name</label>
-                        <input id="lastName" class="input" type="text" name="lastName"
-                               placeholder="a–z . - ' allowed" required>
-                    </div>
+                        <div id="holesContainer" class="form-row nine-col">
+                            <div><label>Hole 1</label>
+                                 <input type="number" name="hole1" min="1" value="3" class="grayed-default hole-score">
+                            </div>
+                            <div><label>Hole 2</label>
+                                 <input type="number" name="hole2" min="1" value="3" class="grayed-default hole-score">
+                            </div>
+                            <div><label>Hole 3</label>
+                                 <input type="number" name="hole3" min="1" value="3" class="grayed-default hole-score">
+                            </div>
+                            <div><label>Hole 4</label>
+                                 <input type="number" name="hole4" min="1" value="4" class="grayed-default hole-score">
+                            </div>
+                            <div><label>Hole 5</label>
+                                 <input type="number" name="hole5" min="1" value="3" class="grayed-default hole-score">
+                            </div>
+                            <div><label>Hole 6</label>
+                                 <input type="number" name="hole6" min="1" value="3" class="grayed-default hole-score">
+                            </div>
+                            <div><label>Hole 7</label>
+                                 <input type="number" name="hole7" min="1" value="3" class="grayed-default hole-score">
+                            </div>
+                            <div><label>Hole 8</label>
+                                 <input type="number" name="hole8" min="1" value="3" class="grayed-default hole-score">
+                            </div>
+                            <div><label>Hole 9</label>
+                                 <input type="number" name="hole9" min="1" value="3" class="grayed-default hole-score">
+                            </div>
 
-                    <button id="searchButton" class="btn" type="submit">Check for Golfer</button>
-                </form>
-            </section>
-
-
-
-            <section class="card" id="matchFound" hidden>
-                <h1>Golfer found</h1>
-                <h2>Add Round</h2>
-
-                <form id="addRoundForm" class="round-form">
-                    <div class="form-row two-col">
-                        <div>
-                            <label for="FirstName">First Name</label>
-                            <input id="FirstName" name="firstName" class="input" type="text" readonly>
+                            <div class="extra-holes" hidden><label>Hole 10</label>
+                            <input type="number" name="hole10" min="1" value="4" class="grayed-default hole-score"></div>
+                            <div class="extra-holes" hidden><label>Hole 11</label>
+                            <input type="number" name="hole11" min="1" value="3" class="grayed-default hole-score"></div>
+                            <div class="extra-holes" hidden><label>Hole 12</label>
+                            <input type="number" name="hole12" min="1" value="3" class="grayed-default hole-score"></div>
+                            <div class="extra-holes" hidden><label>Hole 13</label>
+                            <input type="number" name="hole13" min="1" value="4" class="grayed-default hole-score"></div>
+                            <div class="extra-holes" hidden><label>Hole 14</label>
+                            <input type="number" name="hole14" min="1" value="3" class="grayed-default hole-score"></div>
+                            <div class="extra-holes" hidden><label>Hole 15</label>
+                            <input type="number" name="hole15" min="1" value="3" class="grayed-default hole-score"></div>
+                            <div class="extra-holes" hidden><label>Hole 16</label>
+                            <input type="number" name="hole16" min="1" value="3" class="grayed-default hole-score"></div>
+                            <div class="extra-holes" hidden><label>Hole 17</label>
+                            <input type="number" name="hole17" min="1" value="3" class="grayed-default hole-score"></div>
+                            <div class="extra-holes" hidden><label>Hole 18</label>
+                            <input type="number" name="hole18" min="1" value="3" class="grayed-default hole-score"></div>
                         </div>
                         <div>
-                            <label for="LastName">Last Name</label>
-                            <input id="LastName" name="lastName" class="input" type="text" readonly>
+                            <aside>
+                                The grayed-out text above represents par for each hole and will be submitted if not changed.
+                            </aside>
                         </div>
-                    </div>
-
-                    <input id="GolferID" name="golferID" hidden>
-                    <div class="form-row two-col">
-                        <div>
-                            <label for="roundDate">Date</label><aside>if left empty will use curent date</aside>
-                            <input id="roundDate" name="date" type="date" class="input">
-                        </div>
-                        <div>
-                            <label for="roundTate">Start Time</label><aside>if left empty will use curent time</aside>
-                            <input id="roundTate" name="time" type="time" class="input">
-                        </div>
-                    </div>
-
-                    <label for="holeCount">Number of Holes:</label>
-                    <select class="input" id="holeCount" name="holeCount">
-                        <option value="9" selected>9</option>
-                        <option value="18">18</option>
-                    </select>
-
-                    <div id="holesContainer" class="form-row nine-col">
-                        <div><label>Hole 1</label>
-                             <input type="number" name="hole1" min="1" value="3" class="grayed-default hole-score">
-                        </div>
-                        <div><label>Hole 2</label>
-                             <input type="number" name="hole2" min="1" value="3" class="grayed-default hole-score">
-                        </div>
-                        <div><label>Hole 3</label>
-                             <input type="number" name="hole3" min="1" value="3" class="grayed-default hole-score">
-                        </div>
-                        <div><label>Hole 4</label>
-                             <input type="number" name="hole4" min="1" value="4" class="grayed-default hole-score">
-                        </div>
-                        <div><label>Hole 5</label>
-                             <input type="number" name="hole5" min="1" value="3" class="grayed-default hole-score">
-                        </div>
-                        <div><label>Hole 6</label>
-                             <input type="number" name="hole6" min="1" value="3" class="grayed-default hole-score">
-                        </div>
-                        <div><label>Hole 7</label>
-                             <input type="number" name="hole7" min="1" value="3" class="grayed-default hole-score">
-                        </div>
-                        <div><label>Hole 8</label>
-                             <input type="number" name="hole8" min="1" value="3" class="grayed-default hole-score">
-                        </div>
-                        <div><label>Hole 9</label>
-                             <input type="number" name="hole9" min="1" value="3" class="grayed-default hole-score">
-                        </div>
-
-                        <div class="extra-holes" hidden><label>Hole 10</label>
-                        <input type="number" name="hole10" min="1" value="4" class="grayed-default hole-score"></div>
-                        <div class="extra-holes" hidden><label>Hole 11</label>
-                        <input type="number" name="hole11" min="1" value="3" class="grayed-default hole-score"></div>
-                        <div class="extra-holes" hidden><label>Hole 12</label>
-                        <input type="number" name="hole12" min="1" value="3" class="grayed-default hole-score"></div>
-                        <div class="extra-holes" hidden><label>Hole 13</label>
-                        <input type="number" name="hole13" min="1" value="4" class="grayed-default hole-score"></div>
-                        <div class="extra-holes" hidden><label>Hole 14</label>
-                        <input type="number" name="hole14" min="1" value="3" class="grayed-default hole-score"></div>
-                        <div class="extra-holes" hidden><label>Hole 15</label>
-                        <input type="number" name="hole15" min="1" value="3" class="grayed-default hole-score"></div>
-                        <div class="extra-holes" hidden><label>Hole 16</label>
-                        <input type="number" name="hole16" min="1" value="3" class="grayed-default hole-score"></div>
-                        <div class="extra-holes" hidden><label>Hole 17</label>
-                        <input type="number" name="hole17" min="1" value="3" class="grayed-default hole-score"></div>
-                        <div class="extra-holes" hidden><label>Hole 18</label>
-                        <input type="number" name="hole18" min="1" value="3" class="grayed-default hole-score"></div>
-                    </div>
-                    <div>
-                        <aside>
-                            The grayed-out text above represents par for each hole and will be submitted if not changed.
-                        </aside>
-                    </div>
+                    </fieldset>
 
                     <br />
-                    <button class="btn" type="submit">Save Round</button>
+                    <button class="btn" id="saveRoundBtn" type="submit">Save Round</button>
                 </form>
             </section>
 
-
-            <section class="card" id="CloseMatches" hidden>
-                <h1>Close Matches Found!</h1>
-                <div id="statusOptions" class="helper" aria-live="polite"></div>
-                <div id="candidateList"></div>
-                <div id="tryOtherOptions" class="helper" aria-live="polite"></div>
-                <div id="otherOptions"></div>
-            </section>
-
-            <section class="card" id="noMatches" hidden>
-                <h1>No golfer matching your Surch</h1>
-                <div id="options"></div>
-            </section>
-
-            <section class="card" id="ErrorDisplay" hidden>
-                <h1>ErrorDisplay</h1>
-                <div id="status" class="helper" aria-live="polite"></div>
-                <div id="result"></div>
+            <section class="card" id="roundSavedCard" hidden>
+                <h1>Round Saved</h1>
+                <div id="roundSavedMessage" class="helper" aria-live="polite"></div>
+                <div class="table-wrap">
+                    <table class="member-table">
+                        <tbody>
+                            <tr>
+                                <th>New Handicap</th>
+                                <td id="savedHandicap">-</td>
+                            </tr>
+                            <tr>
+                                <th>Score Differential</th>
+                                <td id="savedScoreDiffer">-</td>
+                            </tr>
+                            <tr>
+                                <th>Rounds Played</th>
+                                <td id="savedRoundsPlayed">-</td>
+                            </tr>
+                            <tr>
+                                <th>Round Average</th>
+                                <td id="savedRoundAvg">-</td>
+                            </tr>
+                            <tr>
+                                <th>Season Total</th>
+                                <td id="savedSeasonTotal">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <br />
+                <button class="btn" id="addAnotherRoundBtn" type="button">Add Another Round</button>
             </section>
         </main>
 
@@ -181,8 +194,19 @@
             Admin tools for member handicaps.
         </footer>
 
-        <!-- Your JS -->
-        <script src="{{ url_for('static', filename='js/nameSearch.js') }}"></script>
+        <div id="missingGolferModal" class="modal-backdrop" hidden>
+            <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="missingGolferTitle">
+                <h2 id="missingGolferTitle">Golfer Not Found</h2>
+                <p id="missingGolferMessage"></p>
+                <div class="modal-actions">
+                    <button id="tryDifferentRoundNameBtn" class="candidate-btn" type="button">Try Different Name</button>
+                    <button id="addGolferFromRoundBtn" class="btn" type="button">Add Golfer</button>
+                </div>
+            </div>
+        </div>
+
+        <script id="courseData" type="application/json">{{ courses | tojson }}</script>
+        <script src="{{ url_for('static', filename='js/addRoundForm.js') }}"></script>
     </div>
 </body>
 </html>

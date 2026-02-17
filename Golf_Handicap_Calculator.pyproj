@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>18db94e5-ec11-4cdc-904c-869f6cf76818</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>pythonOnly\main.py</StartupFile>
+    <StartupFile>flaskVertion/flaskConector.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
