@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Print Member Handicaps</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/golfer.css') }}">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header class="site-header">
+            <div class="brand">
+                <span class="brand__logo" aria-hidden="true">
+                    <img src="{{ url_for('static', filename='img/PoloParkLogo.png') }}"
+                         alt="Polo Park East round seal"
+                         class="brand__logo-image" />
+                </span>
+                <h1 class="brand__title">
+                    Polo Park East - Men's Club Handicap System
+                </h1>
+            </div>
+        </header>
+
+        <nav class="navbar" aria-label="Primary">
+            <div class="nav">
+                <a href="{{ url_for('addGolfer') }}">Add Golfer</a>
+                <a href="{{ url_for('addRound') }}">Add Round</a>
+                <a href="#">Update Handicap Metrix</a>
+                <a href="{{ url_for('printMemberHandicaps') }}" class="is-active">Print Member Handicaps</a>
+            </div>
+        </nav>
+
+        <main class="container">
+            <section class="card">
+                <div class="print-toolbar no-print">
+                    <h1>Member Handicap List</h1>
+                    <button class="btn" id="printMemberHandicapsBtn" type="button">Print</button>
+                </div>
+                {% if error %}
+                    <div class="helper">Could not load member handicaps: {{ error }}</div>
+                {% endif %}
+
+                <div class="table-wrap">
+                    <table class="member-table">
+                        <thead>
+                            <tr>
+                                <th><button class="sort-header" data-col="0" data-type="number" type="button">Rank</button></th>
+                                <th><button class="sort-header" data-col="1" data-type="text" type="button">Name</button></th>
+                                <th><button class="sort-header" data-col="2" data-type="number" type="button">Handicap</button></th>
+                                <th><button class="sort-header" data-col="3" data-type="number" type="button">Avrg Score</button></th>
+                                <th><button class="sort-header" data-col="4" data-type="number" type="button">Number of Games Played</button></th>
+                                <th><button class="sort-header" data-col="5" data-type="number" type="button">Season Total</button></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for g in golfers %}
+                                <tr>
+                                    <td>{{ g.rank }}</td>
+                                    <td>
+                                        {% if g.golferID %}
+                                            <a class="member-link" href="{{ url_for('memberDetails', golfer_id=g.golferID) }}">
+                                                {{ g.name }}
+                                            </a>
+                                        {% else %}
+                                            {{ g.name }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ g.handicap }}</td>
+                                    <td>{{ g.roundAvg }}</td>
+                                    <td>{{ g.roundsPlayed }}</td>
+                                    <td>{{ g.seasonTotal }}</td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="6">No members found.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            Admin tools for member handicaps.
+        </footer>
+    </div>
+    <script>
+        document.getElementById("printMemberHandicapsBtn")?.addEventListener("click", () => {
+            window.print();
+        });
+
+        (() => {
+            const table = document.querySelector(".member-table");
+            if (!table) return;
+
+            const tbody = table.querySelector("tbody");
+            const headers = table.querySelectorAll(".sort-header");
+            let currentCol = -1;
+            let ascending = true;
+
+            function parseValue(text, type) {
+                if (type === "number") {
+                    const n = parseFloat(String(text).replace(/[^0-9.-]/g, ""));
+                    return Number.isNaN(n) ? -Infinity : n;
+                }
+                return String(text).trim().toLowerCase();
+            }
+
+            function updateHeaderLabels(activeCol, isAsc) {
+                headers.forEach((h, idx) => {
+                    const base = h.getAttribute("data-label") || h.textContent.replace(/[▲▼]\s*$/, "").trim();
+                    h.setAttribute("data-label", base);
+                    h.textContent = idx === activeCol ? `${base} ${isAsc ? "▲" : "▼"}` : base;
+                });
+            }
+
+            headers.forEach((header) => {
+                header.addEventListener("click", () => {
+                    const col = Number(header.dataset.col);
+                    const type = header.dataset.type || "text";
+                    const rows = Array.from(tbody.querySelectorAll("tr"))
+                        .filter((r) => r.querySelectorAll("td").length > 1);
+
+                    if (currentCol === col) {
+                        ascending = !ascending;
+                    } else {
+                        currentCol = col;
+                        ascending = true;
+                    }
+
+                    rows.sort((a, b) => {
+                        const aText = a.cells[col]?.innerText || "";
+                        const bText = b.cells[col]?.innerText || "";
+                        const av = parseValue(aText, type);
+                        const bv = parseValue(bText, type);
+                        if (av < bv) return ascending ? -1 : 1;
+                        if (av > bv) return ascending ? 1 : -1;
+                        return 0;
+                    });
+
+                    rows.forEach((row) => tbody.appendChild(row));
+                    updateHeaderLabels(currentCol, ascending);
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

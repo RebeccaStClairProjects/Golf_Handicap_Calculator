@@ -11,13 +11,50 @@ def index():
     # Serves templates/index.html so the page and API share the same origin
     return render_template("index.html")
 
-@app.route("/addGolfer")
+@app.route("/addGolfer", methods=["GET", "POST"])
 def addGolfer():
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        result = gs.addGolfer(data)
+        if isinstance(result, dict) and result.get("error"):
+            return jsonify(result), 400
+        return jsonify(result), 200
     return render_template("AddNewGolfer.html")
 
-@app.route("/addRound")
+@app.route("/addRound", methods=["GET", "POST"])
 def addRound():
-    return render_template("AddNewRound.html")
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        result = gs.addRound(data)
+        if isinstance(result, dict) and result.get("error"):
+            return jsonify(result), 400
+        return jsonify(result), 200
+
+    data = gs.getCorseOptions()
+    if isinstance(data, dict) and data.get("error"):
+        return render_template("AddNewRound.html", courses=[], course_error=data.get("error"))
+    return render_template("AddNewRound.html", courses=data.get("courses", []), course_error=None)
+
+@app.route("/printMemberHandicaps")
+def printMemberHandicaps():
+    data = gs.getMemberHandicaps()
+    if isinstance(data, dict) and data.get("error"):
+        return render_template("PrintMemberHandicaps.html", golfers=[], error=data.get("error"))
+    return render_template("PrintMemberHandicaps.html", golfers=data.get("golfers", []), error=None)
+
+@app.route("/member/<int:golfer_id>")
+def memberDetails(golfer_id):
+    data = gs.getGolferByID(golfer_id)
+    if isinstance(data, dict) and data.get("error"):
+        return render_template("MemberDetails.html", summary=None, rounds=[], error=data.get("error"))
+    if data.get("results") != 1:
+        return render_template("MemberDetails.html", summary=None, rounds=[], error="Golfer not found.")
+    return render_template(
+        "MemberDetails.html",
+        summary=data.get("summary"),
+        rounds=data.get("rounds", []),
+        error=None
+    )
 
 @app.get("/ping")
 def ping():
